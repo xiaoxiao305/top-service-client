@@ -8,7 +8,8 @@
             <Button @click="addFlowPage=true" type="primary">页面设计</Button>
             <Button type="primary">发起流程</Button>
           </div>
-          <Button v-else @click="openDesignTab" type="primary" style="width:100px;">编辑配置</Button>
+          <Button v-else @click="openDesignTab(1)" type="primary" style="width:100px;">编辑配置</Button>
+          <Button @click="openDesignTab(100)" type="primary" style="width:100px;">编辑配置2</Button>
         </div>
         <Table :columns="columns" :data="data"></Table>
         <Modal
@@ -62,8 +63,8 @@
         openDataTab(dataId){
            this.setTab({id:this.menu.id,name:this.menu.name+"/添加数据",icon:this.menu.icon,type:2,tid:this.menu.tid,did:dataId});
         },
-        openDesignTab(){
-          this.setTab({id:this.menu.id,name:this.menu.name+"/字段编辑",icon:this.menu.icon,type:1,tid:this.menu.tid});
+        openDesignTab(type){
+          this.setTab({id:this.menu.id,name:this.menu.name+"/字段编辑",icon:this.menu.icon,type:type,tid:this.menu.tid});
         }, 
         async loadColumns(){
           this.columns=[]; 
@@ -130,8 +131,7 @@
          }, 
        } ,  
        created(){ 
-         this.loadColumns();
-         this.loadData();
+        //main中SwitchTab已执行load
        }
      }
      </script> 

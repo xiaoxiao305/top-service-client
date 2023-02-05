@@ -56,6 +56,26 @@ Array.prototype.remove=function (item) {
   }
 }
 Array.prototype.insert = function(index, value){this.splice(index,0, value);}
+Array.prototype.count=function(item){
+  let count=0
+  this.forEach(val=>{if(val===item)count++})
+  return count
+}
+Array.prototype.contains=function (item){
+  let idx = this.indexOf(item);
+  if (idx > -1) {
+    return true
+  }
+  if(typeof(item)==='object'){
+    let str=JSON.stringify(item)
+    for (let i=0;i<this.length;i++){
+      if (JSON.stringify(this[i])===str){
+        return true
+      }
+    }
+  }
+  return false
+}
 Array.prototype.move=function (index,origin){
   this.splice(index,0,this.splice(origin,1)[0])
 }

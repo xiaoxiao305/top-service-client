@@ -3,7 +3,6 @@ class Ajax {
     this.req = new XMLHttpRequest();
     this.req.responseType = 'text';
      this.host="http://test.itsmtop.com"
-    // this.host="http://127.0.0.1:12345"
   }
   Get(url) {
     let req=this.req

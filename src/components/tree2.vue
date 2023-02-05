@@ -1,5 +1,5 @@
 <template>
-    <li>
+    <li style="line-height:40px;">
       <div @mouseenter="model.toolbar=true" @mouseleave="model.toolbar=false;">
         <icon :type="model.icon" v-if="!model.edit"></icon>
         <b v-if="!model.edit" @click="selectPage(model)">{{model.name}}</b>
@@ -143,7 +143,7 @@
   <style scoped>
    .fade{opacity:1;height:100%;overflow: inherit;transition-property: opacity;transition-duration:2s;}
     ul{opacity:0;height:0px;overflow: hidden;transition-duration:2s;transition-property: opacity;margin-left:20px}
-    .toolbar{border-radius: 8px;border:1px solid #525a6c;margin-right: 8px;display: flex;flex-direction: row}
+    .toolbar{border-radius: 8px;border:1px solid #525a6c;margin-right: 8px;display: flex;flex-direction: row;}
     .toolbar>i{width: 20px;text-align: center;border-right: 1px solid #525a6c;flex: 1}
     .toolbar>i:last-child{border: 0}
   </style>

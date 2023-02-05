@@ -14,7 +14,10 @@
             <template v-else>
               <design v-if="tab.type==1||tab.type==3" :menu="tab" :setTab="setTab"></design>
               <Data v-else-if="tab.type==2" :menu="tab" :setTab="setTab" :loadData="loadTemplateData"></Data>
+              <!-- 表单测试 暂定 -->
+              <form-design v-else-if="tab.type==100" :menu="tab" :setTab="setTab"></form-design> 
               <list v-else :setTab="setTab" :menu="tab" :templates="dbTemplates" :templatesData="dbTemplatesData"></list>
+
             </template>
           </TabPane>
         </Tabs> 
@@ -30,12 +33,13 @@ import Design from "../components/design";
 import Data from "../components/data";
 import widget from "../logic/widget"
 import SysManage from "../components/sys-manage"; 
+import FormDesign from "../components/form-design"; 
 
 export default {
   name: "Main",
-  components:{TreeMenu,Header,List,Design,Data,SysManage},
+  components:{TreeMenu,Header,List,Design,Data,SysManage,FormDesign},
   data() {
-    return {
+     return {
       hideMenu:false,
       theme:"dark",
       tabs:[],
@@ -66,11 +70,12 @@ export default {
       let index = this.tabOrderIds.findIndex(order => order==id);
       if (index>=0)this.tabOrderIds.splice(index,1)
       this.tabOrderIds.push(id);
-      let tid=id.split('_')[0];
-      let type=id.split('_')[1];
+      let tid=parseInt(id.split('_')[0]);
+      let type=parseInt(id.split('_')[1]);
       if(tid<1 || type !=0)return;
       this.loadTemplateInfo(tid);
-      this.loadTemplateData(tid) 
+      if(this.dbTemplates && this.dbTemplates.length>0)
+        this.loadTemplateData(tid) 
     },
     closeTab(id){
       let index = this.tabs.findIndex(tab => (tab.id.toString()+"_"+tab.type.toString())==id);
@@ -86,7 +91,7 @@ export default {
     async loadTemplateInfo(tid){
       this.dbTemplates=await widget.loadTemplateInfo(tid);
     },
-    async loadTemplateData(tid){
+    async loadTemplateData(tid){      
       this.dbTemplatesData=await widget.loadTemplateData(tid,1,10); 
     }
   }, 

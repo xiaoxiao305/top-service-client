@@ -104,6 +104,7 @@ export default {
       this.items = items
     },
     loadMenu(){
+      console.log("menu this.$ws:",this)
       this.$ws.addFunc(proto.MenuListRsp,this.MenuListRsp,this)
       this.$ws.call(proto.MenuList)
     }

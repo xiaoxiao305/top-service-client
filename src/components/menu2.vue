@@ -1,7 +1,7 @@
 <template>
     <ul>
       <tree :model="item" v-for="(item,i) in items" :key="i" :select="select" :loadMenu="loadMenu"></tree>
-      <li v-if="!addNew" style="padding: 8px"><Button type="info" icon="ios-add-circle" @click="addNew=true">添加组织机构</Button></li>
+      <li v-if="!addNew" style="padding: 8px"><Button type="info" icon="ios-add-circle" @click="addNew=true">添加机构</Button></li>
       <add-menu :show="addNew" :add="add" :blur="()=>{addNew=false}"></add-menu>
     </ul>
   </template>

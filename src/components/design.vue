@@ -44,6 +44,8 @@
       },
       saveDesign(){
         let dbTemplates=widget.getdbTemplates(this.items);
+        console.log("design this.items:",this.items,"dbTemplates:",dbTemplates)
+        return;
         if(this.menu.type==3)//流程页面设计
         {
               //page id

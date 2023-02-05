@@ -44,7 +44,7 @@
         },
       },
       methods:{  
-        saveData () {  
+        saveData () { 
           let dbTemplates=widget.getdbTemplates(this.items);
           let templateData={};
           dbTemplates.map(m=>{ 
@@ -53,13 +53,18 @@
           this.$ws.addFunc(proto.EditTemplateDataRsp, function (rsp) {
             if (rsp.code === code.OK) {
               this.$Message.info("保存成功");
+              //暂定  员工扩展信息
+              let list=store["userInfo"]?JSON.parse(store["userInfo"]):{}
+              list[rsp.id]=JSON.stringify(templateData)
+              store["userInfo"]=JSON.stringify(list)
+              console.log("userinfo store:",store["userInfo"])
               // this.loadData(this.menu.tid);
               // this.setTab({id:this.menu.id,tid:this.menu.tid,type:0});//组装父级tid对象
             } else {
               this.$Message.error(code.Message(rsp.code))
             }
           }, this)
-          this.$ws.call(proto.EditTemplateData,this.menu.did,this.menu.tid,JSON.stringify(templateData));
+          this.$ws.call(proto.EditTemplateData,this.menu.did?this.menu.did:0,this.menu.tid,JSON.stringify(templateData));
         }, 
         async loadTemplates(){
           if(!this.menu ||!this.menu.tid|| this.menu.tid<1)return;

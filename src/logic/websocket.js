@@ -1,7 +1,6 @@
 import proto from "./proto"
 import user from "../logic/user"
 const host="ws://test.itsmtop.com/ws" //test.itsmtop.com
-// const host="ws://127.0.0.1:12345/ws" //test.itsmtop.com
 function utf8ArrayToStr(array) {
   let out, i, c, char2, char3;
   out = "";

@@ -237,8 +237,7 @@ export default {
           let dbInfo=widget.loadTemplateInfo2(rsp)
           if(!dbInfo || !dbInfo.data || dbInfo.data.length<1)return;
           let is=widget.getUITemplates(dbInfo.data,false);
-          console.log("is:",is)
-          this.forms=is;
+          this.items=is;
       }, this)
     },
     dragStart(e,widget){

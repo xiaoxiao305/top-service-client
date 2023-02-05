@@ -1,6 +1,6 @@
 <template>
     <!-- 系统管理 -->
-    <div>
+    <div>{{ tab }}
         <!-- 系统管理  本页面 -->
         <Row v-if="tab.type==0">
             <Col v-for="t in tabs" :key="t.type" span="3">
@@ -22,7 +22,7 @@
             </Col> 
         </Row>
         <!-- 组织机构 -->
-        <department v-else-if="5"></department>
+        <department v-else-if="tab.type==5"></department>
         <flowchart v-else-if="tab.type==6"></flowchart>
         <!-- 系统配置 子页面 -->
         <!-- 系统预设数据源 -->

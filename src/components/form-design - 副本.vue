@@ -32,17 +32,17 @@
       <b>属性设置</b>{{ current }}
       <ul>
         <li><b>名称:</b><Input v-model="current.name"></Input></li>
-        <li v-if="current.type===1||current.type===2"><b>占位提示符:</b><Input v-model="current.placeholder"></Input></li>
-        <li v-if="current.type===1||current.type===2||current.type===8||current.type===9"><b>默认值:</b><Input v-model="current.defaultValue"></Input></li>
+        <li v-if="current.type===1"><b>数据类型:</b><Select>
+          <Option value="1">文本</Option>
+          <Option value="2">数字</Option>
+        </Select></li>
+        <li v-if="current.type===1"><b>多行:</b><i-Switch></i-Switch></li>
+        <li v-if="current.type===1"><b>占位提示符:</b><Input></Input></li>
+        <li v-if="current.type===1"><b>默认值:</b><Input></Input></li>
         <li v-if="current.type===3 || current.type===4 || current.type===5">
           <b>数据源:</b>
           <div>
-            <div v-for="(opt,i) in current.options" :key="i" class="data-source">
-              <!-- <Input v-model="opt.value"></Input> -->
-              <Input v-model="opt.label"></Input>
-              <Icon type="ios-remove-circle" @click="removeOptions(i)" />
-            </div>
-            <b @click="addOption" style="color:dodgerblue;cursor: pointer;">添加选项</b>
+            <div v-for="(opt,i) in current.source" :key="i" class="data-source"><Input v-model="opt.value"></Input><Input v-model="opt.label"></Input><Icon type="ios-remove-circle" /></div>
           </div>
         </li>
         <li v-if="current.type===6||current.type===7"><b>范围:</b><i-Switch></i-Switch></li>
@@ -71,19 +71,17 @@
 import RichEditor from "./rich-editor.vue";
 import Merge from "../logic/cell-merge";
 import proto from "../logic/proto";
-import code from "../logic/code";
-import widget from "../logic/widget";
 let Widget = {
-  components:{RichEditor,widget},
+  components:{RichEditor},
   props:['model'],
   render(createElement) {
     let ui={1:"Input",2:"Input",3:"RadioGroup",4:"CheckboxGroup",5:"Select",6:"TimePicker",7:"DatePicker",8:"Rate",9:"i-Switch",10:"Upload",11:"Upload",12:"rich-editor",999:"p"}
     let children =[]
-    if (this.model.label){
-      if (!this.model.options){
-        this.$set(this.model, 'options',[{value:1,label:this.model.label+1},{value:2,label:this.model.label+2},{value:3,label:this.model.label+3}])
+    if (this.model.options){
+      if (!this.model.source){
+        this.$set(this.model, 'source',[{value:1,label:this.model.options+1},{value:2,label:this.model.options+2},{value:3,label:this.model.options+3}])
       }
-      this.model.options.forEach(opt=>{children.push(createElement(this.model.label, {attrs: {value: opt.value}},opt.label))})
+      this.model.source.forEach(opt=>{children.push(createElement(this.model.options, {attrs: {value: opt.value}},opt.label))})
     }
     //todo createElement(tag:any,data:any,children:any,normalizationType: any,alwaysNormalize: boolean)
     let data={domProps:{value: this.model.name},attrs:{}}
@@ -109,15 +107,14 @@ let Widget = {
 export default {
   name: "FormDesign",
   components:{"Widget":Widget,RichEditor},
-  props:['menu'],
   data(){
     return {
       widgets:[
         {type:1,name:"文本框",icon:"ios-create-outline"},
         {type:2,name:"多行输入",icon:"ios-create-outline"},
-        {type:3,name:"单选框组",icon:"md-radio-button-on",label:"Radio"},
-        {type:4,name:"多选框组",icon:"md-checkbox",label:"Checkbox"},
-        {type:5,name:"下拉选择框",icon:"md-arrow-dropdown",label:"Option"},
+        {type:3,name:"单选框组",icon:"md-radio-button-on",options:"Radio"},
+        {type:4,name:"多选框组",icon:"md-checkbox",options:"Checkbox"},
+        {type:5,name:"下拉选择框",icon:"md-arrow-dropdown",options:"Option"},
         {type:6,name:"时间选择器",icon:"ios-time",range:false},
         {type:7,name:"日期选择器",icon:"ios-calendar",range:false},
         {type:8,name:"评分",icon:"ios-star-outline"},
@@ -134,19 +131,10 @@ export default {
       },
       forms:[],//【{type,name,position}】
       atomicId:"A",
-      merge:new Merge(),
-      tId:0
+      merge:new Merge()
     }
   },
   methods:{
-    removeOptions(index){
-      this.current.options.splice(index, 1)
-    },
-    addOption() {
-        this.current.options.push({
-          value: this.newOption
-        }) 
-    },
     mergeCell(){
       this.merge.merge(cells=>{
         let start=cells[0]
@@ -195,51 +183,10 @@ export default {
       return widgets
     },
     saveForm(){
-        let dbTemplates=widget.getdbTemplates(this.forms);
-        console.log("form-design this.forms:",this.forms,"dbTemplates:",dbTemplates)
+      console.log(this.forms)
       //todo::
       let layout=JSON.stringify(this.layout.grid)
-      // this.call(proto.EditTemplateInfo,(this.menu&&this.menu.tid>0?this.menu.tid:0),JSON.stringify(this.forms),this.atomicId,layout);
-      this.$ws.addFunc(proto.EditTemplateInfoRsp, function (rsp) {
-           if (rsp.code === code.OK) {
-            if(this.tId>0){//update
-              this.$Message.info("保存成功");
-            }else{//insert 
-              // if(this.menu.type==12)//员工扩展信息
-              // {
-              //   this.$Message.info("保存成功");
-              //   store["userTemp"]=JSON.stringify({id:rsp.tid,v:dbTemplates})
-              //   console.log("store[usertemp]:",store["userTemp"])
-              // }
-              // else{
-                this.$ws.addFunc(proto.BindTemplateRsp, function (rsp) {
-                if (rsp === code.OK) {
-                  this.$Message.info("保存成功");
-                } else {
-                  this.$Message.error(code.Message(rsp))
-                } 
-              }, this)
-              this.$ws.call(proto.BindTemplate,rsp.tid,this.menu.id);
-            // }
-          }
-            
-           } else {
-             this.$Message.error(code.Message(rsp.code))
-           }
-         }, this)
-      console.log("design this.tId:",this.tId)
-      this.$ws.call(proto.EditTemplateInfo,this.tId?this.tId:0,JSON.stringify(dbTemplates),this.atomicId); 
-    },
-    async loadTemplates(){
-      if(this.tId<1)return
-      this.$ws.call(proto.TemplateInfo,this.tId); 
-      this.$ws.addFunc(proto.TemplateInfoRsp, function (rsp) {
-          let dbInfo=widget.loadTemplateInfo2(rsp)
-          if(!dbInfo || !dbInfo.data || dbInfo.data.length<1)return;
-          let is=widget.getUITemplates(dbInfo.data,false);
-          console.log("is:",is)
-          this.forms=is;
-      }, this)
+      this.call(proto.EditTemplateInfo,(this.menu&&this.menu.tid>0?this.menu.tid:0),JSON.stringify(this.forms),this.atomicId,layout);
     },
     dragStart(e,widget){
       e.dataTransfer.setData('widget', JSON.stringify(widget))
@@ -287,9 +234,6 @@ export default {
       }
     }
     this.merge.grid=this.layout.grid
-  },created(){
-    this.tId=this.menu.tid;
-    this.loadTemplates();
   }
 }
 </script>

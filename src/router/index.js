@@ -17,7 +17,7 @@ let routes=[
   },
   {
     path: '/form',
-    name: 'UserLogin',
+    name: 'FormDesign',
     component: () => import("@/components/form-design")
   },
   {
@@ -44,7 +44,7 @@ let routes=[
 let router=new Router({mode:"history",routes:  routes})
 
 router.beforeEach((to, from, next) => {
-  //return next()
+  // return next()
   let path=to.path.toLowerCase().split("?")[0]
   if (path==="/login" || path=="/404") {
     return next()

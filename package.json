@@ -15,6 +15,7 @@
     "@wangeditor/editor-for-vue": "^1.0.2",
     "ajv": "^6.12.6",
     "axios": "^1.2.1",
+    "depcheck": "^1.4.3",
     "iview": "^3.5.4",
     "js-md5": "^0.7.3",
     "vue": "^2.5.2",
