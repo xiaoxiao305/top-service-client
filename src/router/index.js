@@ -39,6 +39,11 @@ let routes=[
     path:"/flowchart",
     name:"Flowchart",
     component: ()=>import("@/pages/flowchart"),
+  },
+  {
+    path:"/test",
+    name:"Test",
+    component: ()=>import("@/pages/test"),
   }
 ]
 let router=new Router({mode:"history",routes:  routes})

@@ -3,7 +3,7 @@
     <div @mouseenter="model.toolbar=true" @mouseleave="model.toolbar=false;">
       <icon :type="model.icon" v-if="!model.edit"></icon>
       <b v-if="!model.edit" @click="select(model)">{{model.name}}</b>
-      <edit-menu v-else :edit="edit"  :show="model.edit" :model="model"></edit-menu>
+      <edit-menu v-else :edit="editChild" :del="del"  :show="model.edit" :model="model"></edit-menu>
       <div class="toolbar" v-if="model.toolbar && !model.edit && model.tid>=0">
         <icon type="md-add" @click="model.add=true;model.fold=true"></icon>
         <icon type="md-create" @click="model.edit=true;model.toolbar=false"></icon>
@@ -12,7 +12,7 @@
       <Icon :type="model.fold?'ios-arrow-down':'ios-arrow-forward'" v-if="hasChild" @click="model.fold=!model.fold" />
     </div>
     <ul v-if="hasChild || model.add" :class="{'fade':model.fold}" >
-      <tree v-for="(item,k) in model.children" :model="item" :key="k" v-if="hasChild" :selectTab="selectTab" :loadMenu="loadMenu"></tree>
+      <tree v-for="(item,k) in model.children" :model="item" :key="k" v-if="hasChild" :selectTab="selectTab" :loadMenu="loadMenu" :add="add" :edit="edit" :del="del"></tree>
       <add-menu :show="model.add" :add="add" :parent="model" :blur="()=>{model.add=false}"></add-menu>
     </ul>
   </li>
@@ -20,15 +20,10 @@
 <script>
 import AddMenu from "./add-menu"
 import EditMenu from "./edit-menu"
-import proto from "../logic/proto"
-import code from "../logic/code"
  export default {
   name: "tree",
-  props: ['model',"selectTab","loadMenu"],
+  props: ['model',"selectTab","loadMenu","add","edit","del"],
   components:{AddMenu,EditMenu},
-   data() {
-      return {}
-   },
    computed: {
      hasChild() {return this.model.children && this.model.children.length > 0}
    },
@@ -37,58 +32,17 @@ import code from "../logic/code"
       if (item.children&& item.children.length>0) {
         item.fold = !item.fold
       } else {
-          let newItem={id:item.id,name:item.name,icon:item.icon,type:0,tid:item.tid};
-          this.selectTab(newItem)
+        let newItem={id:item.id,name:item.name,icon:item.icon,type:0,tid:item.tid};
+        this.selectTab(newItem)
       }
     }, 
-     add(icon, name, parent) {
-       parent.add = false
-       if (name.trim() === '') {
-         return
-       }
-       this.$ws.addFunc(proto.EditMenuRsp, function (rsp) {
-         if (rsp.code === code.OK) {
-           if (!parent.children) {
-             this.$set(parent, 'children', [])
-           }
-           let child = {id:rsp.id,name: name, icon: icon,tid:0, toolbar: false,edit: false,add: false,fold: false,children:[]}
-           parent.children.push(child)
-         } else {
-           this.$Message.error(code.Message(rsp.code))
-         }
-       }, this)       
-       this.$ws.call(proto.EditMenu, {name: name, icon: icon, parent: parent.id})
-     },
-     del(item) { 
-       if (item.children && item.children.length > 0) {
-         return
-       }          
-       if (confirm(`您确认要删除 ${item.name} 吗?`)) {
-        this.$ws.addFunc(proto.DeleteMenuRsp, function (rsp) {
-          if (rsp === code.OK) {
-            this.loadMenu();
-          } else {
-            this.$Message.error(code.Message(rsp))
-          }
-        }, this)
-        this.$ws.call(proto.DeleteMenu,item.id);
-       }
-     },
-     edit(icon, name) {
-       this.model.edit = false
-       if (name.trim() === '') {
-         return
-       }
-       this.model.name = name
-       this.model.icon = icon
-       this.$ws.addFunc(proto.EditMenuRsp, function (rsp) {
-         if (rsp.code === code.OK) {
-         } else {
-           this.$Message.error(code.Message(rsp.code))
-         }
-       }, this)
-       this.$ws.call(proto.EditMenu, this.model)
-     }
+    editChild(icon, name) {
+      this.model.edit = false
+      if (name.trim() === '') return
+      this.model.name = name
+      this.model.icon = icon
+      this.edit(this.model)
+    }
    }
 }
 </script>

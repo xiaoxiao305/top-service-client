@@ -37,12 +37,10 @@
             this.modal.options.splice(index, 1)
         },
         addOption () {
-            console.log("addOption add modal:",this.modal)
             this.modal.options.push("") 
         },
         editBaseData(){
             if(!this.modal || this.modal.options.length<1 || this.modal.options[0]=="" ){this.$Message.info("请输入数据");return;}
-            console.log("add modal:",JSON.stringify(this.modal)," store:",store["sysBaseData"])
             //暂定
             let data=store["sysBaseData"]?JSON.parse(store["sysBaseData"]):[];
             let d=this.modal;
@@ -50,10 +48,8 @@
             ,"this.modal.id:",(this.modal.id))
             let isConfirm=false
             if(!this.modal || !this.modal.id || this.modal.id<1){
-                console.log("this.modal.id<1:")
                 d.id=data.length+1;
                 data.push(d);
-                console.log("this.data:",data)
                 isConfirm=true;
             }else{
                 if (confirm(`您确认要修改吗?`)) {
@@ -65,7 +61,6 @@
                 }
             }
             if(isConfirm){
-            console.log("edit data2:",JSON.stringify(data))
             this.data=data;
             store["sysBaseData"]=JSON.stringify(data);
             this.$Message.info("保存成功")
@@ -87,13 +82,11 @@
                     on: {
                       click: () => {
                         let data=store["sysBaseData"]?JSON.parse(store["sysBaseData"]):[];
-                        console.log("edit data:",data)
                         data.some(d=>{
                             if(d.id==params.row.id)
                                 this.modal=d;
                             return ;
                         })
-                        console.log("edit this.modal:",this.modal)
                         this.showModal=true;
                       }
                     }
@@ -139,14 +132,12 @@
         getData(id){
             let data=store["sysBaseData"]?JSON.parse(store["sysBaseData"]):[];
             data.map(d=>{
-                console.log("d:",d)
                 return d.id==id;
             })
             return ;
         },
         async loadData(){             
             this.data=store["sysBaseData"]?JSON.parse(store["sysBaseData"]):[];
-            console.log("data:",this.data)
          }, 
        } ,  
        created(){ 

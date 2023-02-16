@@ -14,7 +14,6 @@
     </Card>
 </template>
 <script>  
-import widget from "../logic/widget" 
     export default {
         name:'card-item',
         props:['card'],
@@ -25,17 +24,35 @@ import widget from "../logic/widget"
             }
         },
         methods:{
-            async loadTabColumn(){
-                let dbTemplates=await widget.loadTemplateInfo(this.card.source);
-                if(!dbTemplates || !dbTemplates.data || dbTemplates.data.length<1)return;
-                dbTemplates.data.forEach(t=>{
-                    this.columns.push({title:t.n,key:t.f})
-                })
+            loadTabColumn(){
+                if(this.card.source<1)return
+                this.$ws.addFunc(proto.TemplateInfoRsp, function (rsp) {
+                    if (rsp.code === code.OK) { 
+                        let dbTemplates={};
+                        if(rsp.data && rsp.data.length>0)
+                            dbTemplates={data:JSON.parse(rsp.data),index:rsp.index,tid:rsp.tid};
+                        if(!dbTemplates || !dbTemplates.data || dbTemplates.data.length<1)return;
+                        this.columns=[]
+                        dbTemplates.data.forEach(t=>{this.columns.push({title:t.n,key:t.f})})
+                    }
+                }, this)
+                this.$ws.call(proto.TemplateInfo,this.card.source); 
             },
-            async loadTabData(){
-              this.data=await widget.loadTemplateData(this.card.source,1,10); 
+            loadTabData(){
+                if(this.card.source<1)return
+                this.$ws.addFunc(proto.TemplateDataRsp, function (rsp) {
+                    if (rsp.code === code.OK) { 
+                        this.data=[];
+                        let rspD={}
+                        for(let i=0;i<rsp.data.length;i++){
+                            rspD=JSON.parse(rsp.data[i]);
+                            rspD.id=rsp.id[i];
+                            this.data.push(rspD)
+                        }
+                    }
+                }, this)
+                this.$ws.call(proto.TemplateData,this.card.source,page,size); 
             },
-
         },
         created(){
             this.loadTabColumn();

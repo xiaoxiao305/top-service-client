@@ -55,7 +55,7 @@ export default {
         "ios-images",
         "md-images"
       ]
-    }
+    }  
   },
   directives: {
     drag: {

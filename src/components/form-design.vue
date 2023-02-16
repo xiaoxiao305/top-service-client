@@ -5,7 +5,8 @@
       <div v-for="(widget,i) in widgets" :key="i" draggable="true" @dragstart="dragStart($event,widget)" @dragend="dragging=false"><icon :type="widget.icon"></icon>{{widget.name}}</div>
     </div>
     <div class="form">
-      <div><Button type="success" siz="small" @click="layout.preview=true">预览</Button><Button type="primary" siz="small" @click="saveForm">保存</Button></div>
+      <div><Button type="success" siz="small" @click="layout.preview=true">预览</Button>
+        <Button type="primary" siz="small" @click="save(id,forms,atomicId,layout)">保存</Button></div>
       <table @dblclick="layout.show=true"  @mouseup="merge.check($event)">
         <tr v-for="(columns,r) in layout.grid" :key="r">
           <td v-for="(col,c) in columns" v-if="col!==-1"
@@ -29,7 +30,7 @@
       </table>
     </div>
     <div class="setting" v-if="current">
-      <b>属性设置</b>{{ current }}
+      <b>属性设置</b>
       <ul>
         <li><b>名称:</b><Input v-model="current.name"></Input></li>
         <li v-if="current.type===1||current.type===2"><b>占位提示符:</b><Input v-model="current.placeholder"></Input></li>
@@ -66,50 +67,15 @@
     </Modal>
   </div>
 </template>
-
 <script>
-import RichEditor from "./rich-editor.vue";
 import Merge from "../logic/cell-merge";
 import proto from "../logic/proto";
 import code from "../logic/code";
-import widget from "../logic/widget";
-let Widget = {
-  components:{RichEditor,widget},
-  props:['model'],
-  render(createElement) {
-    let ui={1:"Input",2:"Input",3:"RadioGroup",4:"CheckboxGroup",5:"Select",6:"TimePicker",7:"DatePicker",8:"Rate",9:"i-Switch",10:"Upload",11:"Upload",12:"rich-editor",999:"p"}
-    let children =[]
-    if (this.model.label){
-      if (!this.model.options){
-        this.$set(this.model, 'options',[{value:1,label:this.model.label+1},{value:2,label:this.model.label+2},{value:3,label:this.model.label+3}])
-      }
-      this.model.options.forEach(opt=>{children.push(createElement(this.model.label, {attrs: {value: opt.value}},opt.label))})
-    }
-    //todo createElement(tag:any,data:any,children:any,normalizationType: any,alwaysNormalize: boolean)
-    let data={domProps:{value: this.model.name},attrs:{}}
-    switch (this.model.type){
-      case 2:
-        data.attrs={type:"textarea"}
-        break
-      case 10:{
-        data.attrs={action:"http://127.0.0.1",accept:"image/*"}
-        children=[createElement("Icon",{attrs:{type:"ios-image",size:60}})]
-       // data.on={"before-upload":function (){return false}}
-        break
-      }
-      case 11:
-        data.attrs={action:"http://127.0.0.1",type:"drag"}
-        children.push(createElement("div",{style:{paddingLeft:"10px",paddingRight:"10px"}},[createElement("Icon",{attrs:{type:"md-cloud-upload",size:48},style:{color: "#3399ff"}}),createElement("span","点击或将文件拖拽到这里上传")]))
-        break
-    }
-    return createElement(ui[this.model.type],data,children)
-  }
-}
-
+import widget from "../logic/custom-widget";
 export default {
   name: "FormDesign",
-  components:{"Widget":Widget,RichEditor},
-  props:['menu'],
+  components:{"Widget":widget.Widget},
+  props:['type','save','template'],//type 0数据设计页面  1员工信息模板页面 2流程页面
   data(){
     return {
       widgets:[
@@ -127,15 +93,16 @@ export default {
         {type:12,name:"富文本编辑",icon:"md-document"},
       ],
       current: {id:""},
+      dragging:false,
       layout:{
-        rows:0,columns:0,show:false,
-        grid:[],
+        rows:1,columns:1,show:false,
+        grid:[[0]],
         preview:false
       },
       forms:[],//【{type,name,position}】
       atomicId:"A",
       merge:new Merge(),
-      tId:0
+      id:0
     }
   },
   methods:{
@@ -194,53 +161,6 @@ export default {
       }
       return widgets
     },
-    saveForm(){
-        let dbTemplates=widget.getdbTemplates(this.forms);
-        console.log("form-design this.forms:",this.forms,"dbTemplates:",dbTemplates)
-      //todo::
-      let layout=JSON.stringify(this.layout.grid)
-      // this.call(proto.EditTemplateInfo,(this.menu&&this.menu.tid>0?this.menu.tid:0),JSON.stringify(this.forms),this.atomicId,layout);
-      this.$ws.addFunc(proto.EditTemplateInfoRsp, function (rsp) {
-           if (rsp.code === code.OK) {
-            if(this.tId>0){//update
-              this.$Message.info("保存成功");
-            }else{//insert 
-              // if(this.menu.type==12)//员工扩展信息
-              // {
-              //   this.$Message.info("保存成功");
-              //   store["userTemp"]=JSON.stringify({id:rsp.tid,v:dbTemplates})
-              //   console.log("store[usertemp]:",store["userTemp"])
-              // }
-              // else{
-                this.$ws.addFunc(proto.BindTemplateRsp, function (rsp) {
-                if (rsp === code.OK) {
-                  this.$Message.info("保存成功");
-                } else {
-                  this.$Message.error(code.Message(rsp))
-                } 
-              }, this)
-              this.$ws.call(proto.BindTemplate,rsp.tid,this.menu.id);
-            // }
-          }
-            
-           } else {
-             this.$Message.error(code.Message(rsp.code))
-           }
-         }, this)
-      console.log("design this.tId:",this.tId)
-      this.$ws.call(proto.EditTemplateInfo,this.tId?this.tId:0,JSON.stringify(dbTemplates),this.atomicId); 
-    },
-    async loadTemplates(){
-      if(this.tId<1)return
-      this.$ws.call(proto.TemplateInfo,this.tId); 
-      this.$ws.addFunc(proto.TemplateInfoRsp, function (rsp) {
-          let dbInfo=widget.loadTemplateInfo2(rsp)
-          if(!dbInfo || !dbInfo.data || dbInfo.data.length<1)return;
-          let is=widget.getUITemplates(dbInfo.data,false);
-          console.log("is:",is)
-          this.forms=is;
-      }, this)
-    },
     dragStart(e,widget){
       e.dataTransfer.setData('widget', JSON.stringify(widget))
       this.dragging=true
@@ -260,7 +180,6 @@ export default {
       e.preventDefault()
       this.forms.push({type: 999,pos:[r,c]})
     },
-
     dragLeave(){
       for (let i =0;i<this.forms.length;i++){
         if(this.forms[i].type===999){
@@ -269,27 +188,43 @@ export default {
       }
     },
     onDelete(id){
-      for (let i=0;i<this.forms.length;i++){
+      for (let i=0;i<this.forms.length;i++){id
         if (this.forms[i].id===id){
           this.forms.splice(i,1)
           this.current={}
           break
         }
       }
+    },
+    init(template){
+      if(!template || !template.data)return
+      this.id=template.tid
+      this.forms=widget.recover(JSON.parse(template.data))
+      this.atomicId=template.index
+      this.layout.grid = JSON.parse(template.layout)
+      this.layout.rows = this.layout.grid.length
+      for (let i = 0; i < this.layout.rows; i++) {
+        if (this.layout.grid[i].length > this.layout.columns) {
+          this.layout.columns = this.layout.grid[i].length
+        }
+      }
     }
   },
   mounted() {
-    this.layout.grid=[[0]]
-    this.layout.rows=this.layout.grid.length
-    for (let i=0;i<this.layout.rows;i++){
-      if(this.layout.grid[i].length>this.layout.columns){
-        this.layout.columns=this.layout.grid[i].length
-      }
+    switch (this.type){
+      case 0:
+        //todo 数据设计页面 【list页面已查询后传参，不再重复查询】
+        this.init(this.template)
+        break
+      case 1:
+        //todo 员工信息模板页面
+        this.$ws.addFunc(proto.EmployeeTemplateRsp,(rsp)=>{if(rsp.code == code.OK)this.init(rsp)},this)
+        this.$ws.call(proto.EmployeeTemplate)
+        break
+      case 2:
+        //todo 流程页面
+        break
     }
-    this.merge.grid=this.layout.grid
-  },created(){
-    this.tId=this.menu.tid;
-    this.loadTemplates();
   }
 }
 </script>

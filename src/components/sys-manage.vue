@@ -1,6 +1,6 @@
 <template>
     <!-- 系统管理 -->
-    <div>{{ tab }}
+    <div>
         <!-- 系统管理  本页面 -->
         <Row v-if="tab.type==0">
             <Col v-for="t in tabs" :key="t.type" span="3">
@@ -8,7 +8,7 @@
             <Icon :type="t.icon" style="height:60px;display:block;" size="70"/>
             <b>{{ t.name }}</b>
             </div>
-            </Col> 
+            </Col>
         </Row>
         <!-- 工作台 -->
         <home v-else-if="tab.type==1"></home>
@@ -19,29 +19,31 @@
                 <Icon :type="t.icon" style="height:60px;display:block;" size="70"/>
                 <b>{{ t.name }}</b>
                 </div>
-            </Col> 
+            </Col>
         </Row>
         <!-- 组织机构 -->
-        <department v-else-if="tab.type==5"></department>
+        <organization v-else-if="tab.type==5"></organization>
         <flowchart v-else-if="tab.type==6"></flowchart>
         <!-- 系统配置 子页面 -->
         <!-- 系统预设数据源 -->
         <setting-data v-else-if="tab.type==11"></setting-data>
         <!-- 员工扩展信息 -->
-        <design v-else-if="tab.type==12" :menu="tab" :setTab="setTab"></design>
+        <form-design v-else-if="tab.type==12" :type="1" :save="saveTemp"></form-design>
     </div>
 </template>
-<script> 
-import Home from "../components/home"; 
+<script>
+import Home from "../components/home";
 import Flowchart from '../pages/flowchart';
 import SettingData from "../components/setting-data";
-import Design from "../components/design";
-import Department from "../components/department";
-
+import FormDesign from './form-design.vue';
+import proto from "../logic/proto"
+import code from "../logic/code"
+import widget from "../logic/custom-widget";
+import Organization from "./organization.vue";
 
 export default {
     name:"SysManage",
-    components:{Flowchart,Home,SettingData,Design,Department},
+    components:{Organization, Flowchart,Home,SettingData,FormDesign},
     props:['tab','setTab'],
     data(){
         return {
@@ -56,14 +58,37 @@ export default {
                 {type:9,name:"登录日志",icon:"ios-book"},
                 {type:10,name:"操作日志",icon:"ios-brush"},
                 {type:11,name:"基础数据源",icon:"ios-build"},
-                {type:12,name:"员工扩展信息",icon:"ios-people"}]
+                {type:12,name:"员工扩展信息",icon:"ios-people"}],
+                employeeTId:0
       }
     },
     methods:{
-        showPage(t){ 
+        showPage(t){
             this.setTab({id:this.tab.id,name:this.tab.name+"/"+t.name,
             icon:this.tab.icon,type:t.type,tid:this.tab.tid});
+        },
+        loadTemp(){
+            this.$ws.addFunc(proto.EmployeeTemplateRsp, function (rsp) {
+                let forms=widget.recover(JSON.parse(rsp.data))
+                this.employeeTId=rsp.tid;
+            }, this) 
+            this.$ws.call(proto.EmployeeTemplate);
+        },
+        saveTemp(tId,forms,atomicId,layout){
+            let dbTemplates =widget.parseTo(forms)
+            let layoutInfo=JSON.stringify(layout.grid)
+            this.$ws.addFunc(proto.EditTemplateInfoRsp, function (rsp) {
+                if (rsp.code === code.OK) {
+                    this.$Message.info("保存成功");
+                } else {
+                    this.$Message.error(code.Message(rsp.code))
+                }
+                }, this)
+            this.$ws.call(proto.EditTemplateInfo,tId,JSON.stringify(dbTemplates),atomicId,layoutInfo,1,"");
         }
+    },created(){
+        // this.loadTemp()
     }
+
 }
 </script>

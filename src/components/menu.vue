@@ -1,8 +1,8 @@
 <template>
   <ul v-if="!collapse">
-    <tree :model="item" v-for="(item,i) in items" :key="i" :selectTab="select" :loadMenu="loadMenu"></tree>
-    <li v-if="!addNew" style="padding: 8px"><Button type="info" icon="ios-add-circle" @click="addNew=true">添加组织架构</Button></li>
-    <add-menu :show="addNew" :add="add" :blur="()=>{addNew=false}"></add-menu>
+    <tree :model="item" v-for="(item,i) in items" :key="i" :selectTab="select" :loadMenu="loadMenu" :add="addChild" :edit="editChild" :del="delChild"></tree>
+    <li v-if="!addNew" style="padding: 8px"><Button type="info" icon="ios-add-circle" @click="addNew=true">添加应用模块</Button></li>
+    <add-menu :show="addNew" :add="addMenu" :blur="()=>{addNew=false}"></add-menu>
   </ul>
   <ul v-else class="collapse">
     <!--todo 菜单折叠 -->
@@ -55,20 +55,12 @@ export default {
         item.children.forEach(it=>{data.push(doChild(it))})
         this.drawer.data = data
       }
-    },
-    add(icon,name) {
-      this.addNew = false
-      if (name.trim() === "") {
-        return
-      }
-      this.$ws.addFunc(proto.EditMenuRsp,(rsp=>{
-        if (rsp.code===code.OK){
-          this.items.push({id:rsp.id,icon:icon,name:name,tid:0,toolbar: false, edit: false, add: false, fold: false,children:[]})
-        }else{
-          this.$message.error(code.Message(rsp.code))
-        }
-      }),this)
-     this.$ws.call(proto.EditMenu,{name:name,icon:icon})
+    }, 
+    loadMenu(){
+      this.$ws.addFunc(proto.MenuListRsp,list=>{
+        this.items=this.MenuListRsp(list);
+      },this) 
+      this.$ws.call(proto.MenuList)
     },
     initMenuItem(it, children) {
       it.children.forEach(item => {
@@ -78,8 +70,18 @@ export default {
         }
       })
     },
+    //导航栏排序 暂定
+    sortList(list){
+      let newL1=[],newL2=[]
+      list.forEach(l=>{if(l.tid>=0)newL1.push(l);else newL2.push(l)})
+      newL1.sort((a,b)=>a.id-b.id)
+      newL2.sort((a,b)=>a.tid-b.tid)
+      list=newL1.concat(newL2)
+      return list;
+    },
     MenuListRsp(list) {
       let menus={}
+      list=this.sortList(list)
       list.forEach(item=>{menus[item.id]=item})
       store["menu"]=JSON.stringify(menus)
       let items = []
@@ -101,13 +103,80 @@ export default {
           if (it.children.length > 0) this.initMenuItem(it, children)
         }
       })
-      this.items = items
+      return items;
     },
-    loadMenu(){
-      console.log("menu this.$ws:",this)
-      this.$ws.addFunc(proto.MenuListRsp,this.MenuListRsp,this)
-      this.$ws.call(proto.MenuList)
-    }
+    addMenu(icon,name) {
+      if (name.trim() === "") {
+        return
+      }
+      this.addNew = false
+      this.$ws.addFunc(proto.EditMenuRsp,(rsp=>{
+        if (rsp.code===code.OK){
+          let item={id:rsp.id,icon:icon,name:name,tid:0,toolbar: false, edit: false, add: false, fold: false,children:[]}
+          this.items.push(item);
+          this.items=this.sortList(this.items)
+        }else{
+          this.$message.error(code.Message(rsp.code))
+        }
+      }),this) 
+      this.$ws.call(proto.EditMenu,{name:name,icon:icon})
+    }, 
+    addChild(icon, name, parent) {
+       if (name.trim() === '') {
+         return
+       }
+       parent.add = false
+       this.$ws.addFunc(proto.EditMenuRsp, function (rsp) {
+         if (rsp.code === code.OK) {
+           if (!parent.children) {
+             this.$set(parent, 'children', [])
+           }
+           let child = {id:rsp.id,name: name, icon: icon,tid:0, toolbar: false,edit: false,add: false,fold: false,children:[]}
+           parent.children.push(child)
+         } else {
+           this.$Message.error(code.Message(rsp.code))
+         }
+       }, this)
+       this.$ws.call(proto.EditMenu, {name: name, icon: icon, parent: parent.id})
+     },
+    editChild(model) {
+      this.$ws.addFunc(proto.EditMenuRsp, function (rsp) {
+        if (rsp.code === code.OK) {
+        } else {
+        this.$Message.error(code.Message(rsp.code))
+        }
+      }, this)
+      this.$ws.call(proto.EditMenu, model)
+     },
+     delChild(item) {
+       if (item.children && item.children.length > 0) {
+         return
+       }
+       if (confirm(`您确认要删除 ${item.name} 吗?`)) {
+        this.$ws.addFunc(proto.DeleteMenuRsp, function (rsp) {
+          if (rsp === code.OK) {
+            this.editMenu(this.items,item.id)
+          } else {
+            this.$Message.error(code.Message(rsp))
+          }
+        }, this)
+        this.$ws.call(proto.DeleteMenu,item.id);
+       }
+     },
+     editMenu(list,id){
+      if(!list)return
+      let isFind=false
+        let index=list.findIndex((l) =>l.id===id);
+        if(index>=0){list.splice(index,1);isFind=true;}
+      if(!isFind){
+        for(let i=0;i<list.length;i++){
+          if(!isFind){
+            list[i].children=this.editMenu(list[i].children,id)
+          }
+        }
+      }
+      return list;
+    }, 
   },
   created() {
     this.loadMenu()

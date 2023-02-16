@@ -1,8 +1,8 @@
 export default{
 	Login:1,
 	LoginRsp:2,
-	AddEmployee:3,
-	AddEmployeeRsp:4,
+	EditEmployeeInfo:3,
+	EditEmployeeInfoRsp:4,
 	Employees:5,
 	EmployeesRsp:6,
 	EditMenu:7,
@@ -24,4 +24,12 @@ export default{
 	DelTemplateDataRsp:23,
 	DeleteMenu:24,
 	DeleteMenuRsp:25,
+	EmployeeTemplate:26,
+	EmployeeTemplateRsp:27,
+	EditOrganization:28,
+	EditOrganizationRsp:29,
+	Organizations:30,
+	OrganizationsRsp:31,
+	DeleteOrganization:32,
+	DeleteOrganizationRsp:33,
 }
