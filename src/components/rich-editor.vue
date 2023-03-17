@@ -8,12 +8,12 @@
 import { Editor, Toolbar } from '@wangeditor/editor-for-vue'
 export default {
   name: "RichEditor",
+  props:['val','onChange'],
   components: { Editor, Toolbar },
   data() {
     return {
       editor: null,
-      design:true,
-      html:"",
+      html:this.val,
       config:{
         toolbar:{
           // toolbarKeys: [ /* 显示哪些菜单，如何排序、分组 */ ],
@@ -28,18 +28,18 @@ export default {
   },
   methods: {
     onCreated(editor) {
-      this.editor = Object.seal(editor)
+      // this.editor = Object.seal(editor)
     },
-    onChange(editor) {
+    onChange2(editor) {
       console.log('onChange', editor.getHtml()) // onChange 时获取编辑器最新内容
 
     },
   },
   mounted() {},
   beforeDestroy() {
-    const editor = this.editor
-    if (editor == null) return
-    editor.destroy()
+    // const editor = this.editor
+    // if (editor == null) return
+    // editor.destroy()
   }
 }
 </script>

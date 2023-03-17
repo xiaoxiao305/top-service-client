@@ -1,7 +1,7 @@
 <template>
   <li class="add" v-if="show">
     <icon :type="icon" @click="showIcon=true" ></icon>
-    <input v-model="name" :placeholder="$t('input')" @keyup.enter="add(icon,name,parent)" ></input>
+    <input v-model="name" :placeholder="$t('input')" @keyup.enter="add(icon,name,parent)"/>
     <icon type="md-checkmark" @click="add(icon,name,parent)"></icon>
     <div class="icon-list" v-drag v-if="showIcon">
       <div><b>请选择图标</b><icon type="md-close" @click="showIcon=false"></icon></div>

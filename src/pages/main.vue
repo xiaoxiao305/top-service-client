@@ -13,6 +13,7 @@
             </template>
             <template v-else>
               <list ref="list" :setTab="setTab" :menu="tab"></list>
+              <!-- <test></test> -->
             </template>
           </TabPane>
         </Tabs>
@@ -24,7 +25,7 @@
 import Header from "../components/header";
 import TreeMenu from "../components/menu";
 import List from "../components/list";
-import SysManage from "../components/sys-manage";
+import SysManage from "../components/sys-manage"; 
 
 export default {
   name: "Main",
@@ -90,4 +91,8 @@ export default {
 </script>
 <style scoped>
 .row div{width:80px;height:80px;border:1px solid black}
+.menu ul li>div:hover{background-color: #1F2D3D;cursor: pointer;}
+.menu ul li>div b:active{background-color:#001528}
+.menu ul li>div b:focus{background-color:#001528}
+
 </style>

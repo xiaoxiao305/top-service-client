@@ -1,9 +1,9 @@
 <template>
   <li>
-    <div @mouseenter="model.toolbar=true" @mouseleave="model.toolbar=false;">
-      <b v-if="!model.edit" @click="select(model)">{{model.name}}</b>
+    <div class="item" @mouseenter="model.toolbar=true" @mouseleave="model.toolbar=false;">
+      <b v-if="!model.edit" @click="select(model)" style="display: inline-block;height: 40px;line-height: 40px;">{{model.name}}</b>
       <edit v-else :onEdit="onEdit" :onDel="onDel" :show="model.edit" :model="model" :action="1" :blur="()=>{model.add=false}"></edit>
-      <div style="display: inline;" class="toolbar" v-if="model.toolbar && !model.edit">
+      <div class="toolbar" v-if="model.toolbar && !model.edit">
         <icon type="md-add" @click="model.add=true;model.fold=true"></icon>
         <icon type="md-create" @click="model.edit=true;model.toolbar=false"></icon>
         <icon type="md-close" v-if="!model.children || model.children.length===0" @click="onDel(model)"></icon>
@@ -25,34 +25,26 @@ export default {
   components:{edit},
   data() {
     return {}
+  },methods:{
+    select(item) {
+      if (item.children&& item.children.length>0) {
+        item.fold = !item.fold
+      } else
+        this.onSelect(item)
+    }
   },
   computed: {
     hasChild() {return this.model.children && this.model.children.length > 0}
-  },
-  methods: {
-    select(item) {
-      this.onSelect(item)
-      // if (item.children&& item.children.length>0) {
-      //   item.fold = !item.fold
-      // } else {
-      //   let newItem={id:item.id,name:item.name,icon:item.icon,type:0,tid:item.tid};
-      //   this.selectTab(newItem)
-      // }
-    },
-    editChild(icon, name) {
-      // this.model.edit = false
-      // if (name.trim() === '') return
-      // this.model.name = name
-      // this.model.icon = icon
-      // this.edit(this.model)
-    }
   }
 }
 </script>
 <style scoped>
-.fade{opacity:1;height:100%;overflow: inherit;transition-property: opacity;transition-duration:2s;}
-ul{opacity:0;height:0px;overflow: hidden;transition-duration:2s;transition-property: opacity;margin-left:20px}
-.toolbar{border-radius: 8px;border:1px solid #525a6c;margin-right: 8px;display: flex;flex-direction: row}
-.toolbar>i{width: 20px;text-align: center;border-right: 1px solid #525a6c;flex: 1}
-.toolbar>i:last-child{border: 0}
+  .fade{opacity:1;height:100%;overflow: inherit;transition-property: opacity;transition-duration:2s;padding-left: 10px;}
+  ul{opacity:0;height:0px;overflow: hidden;transition-duration:2s;transition-property: opacity;}
+  .item{height: 50px;line-height: 50px;padding-left:10px}
+  .item:hover{background: #fcfcfd;}
+ 
+
+  .toolbar{margin-right: 8px;display: flex;flex-direction: row}
+  .toolbar>i{width: 20px;text-align: center; flex: 1} 
 </style>

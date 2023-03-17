@@ -1,26 +1,33 @@
 <template>
     <!-- 系统管理 -->
     <div>
-        <!-- 系统管理  本页面 -->
-        <Row v-if="tab.type==0">
-            <Col v-for="t in tabs" :key="t.type" span="3">
-            <div @click="showPage(t)" style="width:100px;line-height:40px;text-align: center;border-radius: 5px;background-color: #F2F3F7;cursor: pointer;">
-            <Icon :type="t.icon" style="height:60px;display:block;" size="70"/>
-            <b>{{ t.name }}</b>
-            </div>
-            </Col>
-        </Row>
+        <!-- 系统管理  主页面 -->
+        <ul v-if="tab.type==0">
+            <li v-for="t in tabs" :key="t.type" span="3" @click="showPage(t)">
+                <div><Icon :type="t.icon" size="70"/><br>
+                <b>{{ t.name }}</b>  </div>
+            </li> 
+        </ul>
+        <!-- <ul v-if="tab.type==0" class="ul border">
+            <li><div>111111</div></li>
+            <li><div>222222222</div></li>
+            <li>
+                <ul>
+                    <li><div>3333333</div></li>
+                    <li><div>444444444</div></li>
+                    <ul><li><div>55555555</div></li></ul>
+                </ul>
+            </li>
+        </ul> -->
         <!-- 工作台 -->
         <home v-else-if="tab.type==1"></home>
-        <!-- 系统配置 本页面 -->
-        <Row v-else-if="tab.type==2">
-            <Col v-for="t in tabs2" :key="t.type" span="3">
-                <div @click="showPage(t)" style="width:100px;line-height:40px;text-align: center;border-radius: 5px;background-color: #F2F3F7;cursor: pointer;">
-                <Icon :type="t.icon" style="height:60px;display:block;" size="70"/>
-                <b>{{ t.name }}</b>
-                </div>
-            </Col>
-        </Row>
+        <!-- 系统配置 主页面 -->
+        <ul v-else-if="tab.type==2">
+            <li  v-for="t in tabs2" :key="t.type" span="3" @click="showPage(t)">
+                <div><Icon :type="t.icon" size="70"/><br>
+                <b>{{ t.name }}</b>  </div>
+            </li> 
+        </ul>
         <!-- 组织机构 -->
         <organization v-else-if="tab.type==5"></organization>
         <flowchart v-else-if="tab.type==6"></flowchart>
@@ -28,7 +35,10 @@
         <!-- 系统预设数据源 -->
         <setting-data v-else-if="tab.type==11"></setting-data>
         <!-- 员工扩展信息 -->
-        <form-design v-else-if="tab.type==12" :type="1" :save="saveTemp"></form-design>
+        <div v-else-if="tab.type==12">
+            <form-design v-if="designTemplate" :type="1" :save="saveTemp" :template="designTemplate"></form-design>
+        </div>
+        
     </div>
 </template>
 <script>
@@ -59,7 +69,7 @@ export default {
                 {type:10,name:"操作日志",icon:"ios-brush"},
                 {type:11,name:"基础数据源",icon:"ios-build"},
                 {type:12,name:"员工扩展信息",icon:"ios-people"}],
-                employeeTId:0
+            designTemplate:{},employeeTId:0
       }
     },
     methods:{
@@ -67,28 +77,30 @@ export default {
             this.setTab({id:this.tab.id,name:this.tab.name+"/"+t.name,
             icon:this.tab.icon,type:t.type,tid:this.tab.tid});
         },
-        loadTemp(){
-            this.$ws.addFunc(proto.EmployeeTemplateRsp, function (rsp) {
-                let forms=widget.recover(JSON.parse(rsp.data))
-                this.employeeTId=rsp.tid;
-            }, this) 
-            this.$ws.call(proto.EmployeeTemplate);
-        },
-        saveTemp(tId,forms,atomicId,layout){
+        //保存员工扩展信息模板数据
+        saveTemp(tId,forms,atomicId,layout,clear){
             let dbTemplates =widget.parseTo(forms)
             let layoutInfo=JSON.stringify(layout.grid)
             this.$ws.addFunc(proto.EditTemplateInfoRsp, function (rsp) {
-                if (rsp.code === code.OK) {
+                if (rsp.code === code.OK)
                     this.$Message.info("保存成功");
-                } else {
+                else
                     this.$Message.error(code.Message(rsp.code))
-                }
                 }, this)
-            this.$ws.call(proto.EditTemplateInfo,tId,JSON.stringify(dbTemplates),atomicId,layoutInfo,1,"");
+            this.$ws.call(proto.EditTemplateInfo,tId,dbTemplates,atomicId,layoutInfo,1,"",clear);
         }
-    },created(){
-        // this.loadTemp()
     }
-
 }
 </script>
+<style scoped>
+ul{padding: 8px;display: flex;flex-direction: row;}
+ul>li{margin:30px}
+ul>li>div{width:100px;line-height:40px;text-align: center;border-radius: 5px;background-color: #F2F3F7;cursor: pointer;}
+ul>li>div:hover{border:1px solid #50a4e0}
+ul>li>.ivu-icon{height:60px;display:block;}
+
+.ul{width:200px}
+
+.ul div{height: 50px;line-height: 50px;text-align: center}
+.ul div:hover{background: gray;}
+</style>

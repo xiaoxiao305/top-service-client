@@ -70,10 +70,4 @@ export default {
     }
   }
 }
-</script>
-<style scoped>
-  .rotate{animation:rotate90 0.5s;animation-fill-mode: forwards}
-  .recovery{animation:rotate180 0.5s;animation-fill-mode: forwards}
-  @keyframes rotate90{ 0%{transform:rotate(0deg)} 100%{transform:rotate(-90deg)}}
-  @keyframes rotate180{0%{transform:rotate(-90deg)} 100%{transform:rotate(0deg)}}
-</style>
+</script> 

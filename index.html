@@ -5,9 +5,11 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>企业信息&流程管理平台</title>
     <style>
-      body,ul,li{padding:0;margin: 0;list-style: none;font-size: 12px;font-family: 'Avenir',Helvetica,Arial,sans-serif;-webkit-font-smoothing: antialiased;-moz-osx-font-smoothing: grayscale;}
+      body,ul,li{padding:0;margin: 0;list-style: none;font-size: 14px;font-family:'Segoe UI', 'Avenir',Helvetica,Arial,sans-serif;-webkit-font-smoothing: antialiased;-moz-osx-font-smoothing: grayscale;}
       .layout{display:flex;min-height:100vh;flex-direction: column;}
-      .dark{background:linear-gradient(#283140,#294150,#283140);color:#eee;} /*(#283140,#294150,#283140) (#1b1b1b,#212121,#1b1b1b)   */
+      /*(#283140,#294150,#283140) (#1b1b1b,#212121,#1b1b1b)   */
+      /* .dark{background:linear-gradient(#283140,#294150,#283140);color:#eee;} */
+      .dark{background-color:#304156;color:#eee;} 
       .primary{background: linear-gradient(#397ec6, #5cabdd, #397ec6);linear-gradient(#397ec6, #5cabdd, #397ec6);color: #eee;}
       .header{height:60px;line-height: 60px;display: flex;flex-direction: row}
       .header>img{width:44px;height:43px;margin-top:8px;margin-left: 10px;}
@@ -20,9 +22,13 @@
       .menu{width:250px;cursor: default;transition-duration: 0.5s;}
       .menu ul{padding:0;margin:0}
       .menu ul li{display: flex;flex-direction: column;margin-top: 2px;margin-bottom: 3px;}
-      .menu ul li>div{flex: 1;display: flex;flex-direction: row;height:28px;line-height: 28px;}
-      .menu ul li>div b{flex: 1}
-      .menu ul li>div i{width:25px;text-align: center;font-size:15px;line-height: 28px;}
+      .menu ul li>div{flex: 1;display: flex;flex-direction: row;height:50px;line-height: 50px;padding-left: 0px;}
+      /* .menu ul li>div:hover{background-color: #1F2D3D;cursor: pointer;}
+      .menu ul li>div b:active{background-color:#001528}
+      .menu ul li>div b:focus{background-color:#001528} */
+
+      .menu ul li>div b{flex: 1;}
+      .menu ul li>div i{width:25px;text-align: center;font-size:15px;line-height: 50px;}
       .menu .add{display: flex;flex-direction: row;height:30px;border: 1px dotted #ccc;border-radius: 3px;}
       .menu .add input{flex: 1;}
       .menu .add i{width: 25px;height: 30px;line-height: 30px;text-align: center;font-size: 15px;}
@@ -34,7 +40,29 @@
       .collapse{width: 60px;transition-duration:0.5s;}
       .dark .menu input{background: #283140 !important;opacity: 0.8;color:#fff;border: 1px solid #ccc;border-radius: 3px;}
       .dark .menu input:focus{border: 1px solid red !important;}
-      .content{flex:1;min-height:100%;border-radius:5px 5px 0 0;background: #fff;color: #283140;display: flex;flex-direction: column}
+      .content{flex:1;min-height:100%;border-radius:5px 5px 0 0;background: #fff;color: #283140;display: flex;flex-direction: column;}
+      .border{border:1px solid red}
+/* 查询按钮 */
+.btns{padding:4px;}
+.btn{border-radius: 5px;display: inline-block;padding:0 8px;height: auto;line-height: normal;margin:5px;color: #AAAAAA;flex-direction:column;text-align:center;}
+.btn:hover{cursor:pointer;background-color:#f5f5f5;color: black;}
+/*分页控件*/
+.ivu-page{margin-left: auto;margin-right: 1%; height: 80px;line-height: 80px;}
+/* 折叠菜单按钮 */
+.rotate{animation:rotate90 0.5s;animation-fill-mode:forwards;}
+.recovery{animation:rotate180 0.5s;animation-fill-mode:forwards;}
+@keyframes rotate90{0%{transform:rotate(0deg)} 100%{transform:rotate(-90deg)}}
+@keyframes rotate180{0%{transform:rotate(-90deg)} 100%{transform:rotate(0deg)}}
+/*数列 数据行*/
+.data td{vertical-align: top}
+.data td>div{width:95%;margin:0 auto;display: flex; border: 1px dotted #ccc;line-height: 50px;padding:12px;}
+            
+.data td>div>b{padding-left:5px;padding-right: 5px;position: relative;line-height: 50px;vertical-align: middle;display: inline-block;min-width:60px;}
+.data td>div .ivu-input-wrapper,
+.data td>div .ivu-select,
+.data td>div .ivu-upload{width: 250px}
+.data td>div .ivu-checkbox-group,td>div .ivu-upload{display: inline-block;position: relative;line-height: normal;vertical-align: middle;}
+.data td>div .editor{display: inline-block;position: relative;line-height: normal;vertical-align: middle;}
     </style>
   </head>
   <body>

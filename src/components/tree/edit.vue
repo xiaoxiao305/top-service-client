@@ -1,6 +1,6 @@
 <template>
-  <li class="add" v-if="show" >
-    <input v-model="name" @keyup.enter="onEdit(name,parent,action,id)" @blur="blur"/>
+  <li class="add" v-if="show">
+    <input style="background-color:white !important;opacity: 0.8;color: black;" v-model="name" @keyup.enter="onEdit(name,parent,action,id)" @blur="blur"/>
     <icon type="md-checkmark" @click="onEdit(name,parent,action,id)"></icon>
   </li>
 </template>
@@ -52,3 +52,6 @@ export default {
   }
 }
 </script>
+<style>
+/* .add input{background: red !important;} */
+</style>

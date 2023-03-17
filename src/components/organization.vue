@@ -1,46 +1,59 @@
 <template>
 <div>
   <Row>
-    <Col span="5"><tree :key="componentKey" :onSelect="select" :items="organizations" :onEdit="editOrganization" :onDel="delOrganization"></tree></Col>
-    <Col span="19" v-if="curOrg.id>0">
-      <Button type="primary" @click="addData">添加员工</Button>
-      <Button v-if="columns&& columns.length>0" @click="showSetting" type="primary">设置表头</Button>
-        <!-- 配置表头 -->
-        <Drawer title="字段配置" :closable=true placement="right" v-model="isSetting">
-          <table-column
-          :dataArr="allColumns"
-          :checkList="checkProp"
-          :defaultArr="checkProp"
-          :confirm="handleConfirm" :closeSetting="setSetting"
-        />
-      </Drawer>
+    <Col span="4" :class="['menu',show?'':'hide']" style="min-height:500px;">
+      <!-- <Drawer :inner=true :transfer=false placement="left" v-model="show" > -->
+        <tree :key="componentKey" :onSelect="select" :items="organizations" :onEdit="editOrganization" :onDel="delOrganization"></tree>
+      <!-- </Drawer> -->
+    </Col>
+    <!-- <tree :key="componentKey" :onSelect="select" :items="organizations" :onEdit="editOrganization" :onDel="delOrganization"></tree> -->
+    <Col span="20">
+      <!-- <Icon type="md-menu" size="24" @click="show=!show" 
+      :class="[show?'recovery':'rotate']"></Icon> -->
+      <div v-if="curOrg.id>0" class="content">
+      <div class="btns">
+        <p class="btn" @click="addData"><Icon type="ios-add" size="24"/>添加员工</p>
+        <p class="btn" @click="isSearch=true"><Icon type="ios-search" size="24"/>筛选</p>
+      </div>
       <Table :columns="columns" :data="employees">
         <template #action="scope">
-          <Button type="info" size="small" @click="edit(scope.row)">编辑</Button>
+          <Icon type="ios-create" @click="edit(scope.row)" size="26"/>
         </template>
       </Table>
       <Page v-if="query.total>0" :total="query.total" :page-size="query.size" @on-change="changepage" show-elevator show-total></Page>
+    </div>
     </Col>
   </Row>
-  <Modal v-model="viewInfo" title="编辑员工信息" width="800">
-    <table>
-      <tr>
-        <td><b>账号</b><Input v-model="userInfo.account" placeholder="请输入账号"></Input></td>
-        <td><b>密码</b><Input v-model="userInfo.pwd" placeholder="请输入密码"></Input></td>
-        <td><b>姓名</b><Input v-model="userInfo.name" placeholder="请输入姓名"></Input></td>
-      </tr>
-      <tr v-for="(columns,r) in template.layout" :key="r">
+  <!-- 高级查询 --> 
+  <Modal v-model="isSearch" title="高级查询" width="650" :mask-closable="true" draggable footer-hide>
+    <searcher v-if="template2.widgets" :template="template2.widgets" :search="Search"></searcher>
+  </Modal>
+ 
+  <Modal v-model="viewInfo" title="编辑员工数据" width="650" footer-hide>
+<div style="display: flex;flex-direction: column;"> 
+  <table class="preview data">
+    <tr v-if="userInfo.id<1">
+      <td>
+        <div><b>账号</b><Input v-model="userInfo.account" placeholder="请输入账号" /></div>
+      </td>
+    </tr>
+    <tr v-if="userInfo.id<1">
+      <td>
+        <div><b>密码</b><Input type="password" v-model="userInfo.pass" placeholder="请输入密码"/></div>
+      </td>
+    </tr>
+    <tr> 
+    </tr>
+    <tr v-for="(columns,r) in template.layout" :key="r">
         <td v-for="(col,c) in columns" v-if="col!==-1" :colspan="col%100>1?col%100:null" :rowspan="col>199?Math.floor(col/100):null" :key="r+'-'+c">
-          <div v-for="(widget,i) in widgets(r,c)" :key="i" >
-            <b>{{widget.name}}</b><widget :model="widget"></widget>
+          <div v-for="(widget,i) in widgets(r,c)" :key="i">
+            <b>{{widget.name}}</b><w :model="widget"></w>
           </div>
         </td>
-      </tr>
-    </table>
-    <div slot="header">
-      <Button type="primary" @click="updateEmployeeInfo">确定</Button>
-    </div>
-    <div slot="footer"></div>
+      </tr> 
+  </table>
+  <p style="margin-left:auto;margin-right: 5%" class="btn" @click="updateEmployeeInfo"><Icon type="ios-create-outline" size="24" />保存</p>
+</div>
   </Modal>
 </div>
 </template>
@@ -51,23 +64,32 @@ import code from "../logic/code"
 import widget from "../logic/custom-widget";
 import md5 from "js-md5"; 
 import TableColumn from '../components/table-column'
+import w from '../components/widget'
+import Searcher from '../components/searcher'
 export default {
   name: "organization",
-  components:{tree,"Widget":widget.Widget,TableColumn},
+  components:{tree,TableColumn,w,Searcher},
   data(){
     return{
       columns:[],
       employees:[],
       organizations:[],
       viewInfo:false,
-      query:{size:3,page:1,total:0},
+      query:{size:10,page:1,total:0},
       template:{layout:[],widgets:[]},
       componentKey:0,curOrg:{},
-      userInfo:{id:0,account:"acc"+parseInt(Math.random()*100),pwd:"pwd"+parseInt(Math.random()*100),name:"name"+parseInt(Math.random()*100)},
-      allColumns:[],isSetting: false, checkProp: [],
+      userInfo:{id:0,account:"",pass:""},
+      allColumns:[],checkProp: [],show:true,isSearch:false,template2:{layout:[],widgets:[]},
     }
   },
   methods:{
+    //选择查询条件后 服务器查询
+    Search(where){
+      this.isSearch=false
+      console.log("search obj:",where)
+      if(!where || where.length<1)return 
+      this.loadEmployees(this.curOrg.id,where)
+    },
     changepage(page){
       this.query.page=page
       this.loadEmployees(this.curOrg.id) 
@@ -77,7 +99,9 @@ export default {
         this.$Message.info("请选择组织机构")
         return
       }
-     this.viewInfo=true
+      this.viewInfo=true
+      this.userInfo={id:0,account:"",pass:""}
+      this.template.widgets.map(w=>{w.value=''})
     },
     widgets(r,c){
       let widgets=[]
@@ -90,22 +114,32 @@ export default {
       return widgets
     },
     updateEmployeeInfo(){
-      this.$forceUpdate()
-      console.log("after forceUpdate:",this.template.widgets)
-      if(this.userInfo.account==""||this.userInfo.pwd=="")return
+      if(this.userInfo.id<1 &&(this.userInfo.account==""||this.userInfo.pass==""))return
       let data={}
-      this.template.widgets.map(w=>{data[w.id]=w.name+parseInt(Math.random()*100)})
+      this.template.widgets.map(w=>{data[w.id]=w.value})
+      if(this.userInfo.id<1)//只有添加员工才能传acc+pass
+        data=Object.assign(data,{acc:this.userInfo.account,pass:md5(this.userInfo.pass)})
       this.$ws.addFunc(proto.EditEmployeeInfoRsp,(rsp=>{
         if (rsp.code===code.OK){ 
           this.$Message.info("保存成功")  
-          let e={id:rsp.id,account:this.userInfo.account,pass:md5(this.userInfo.pwd),name:this.userInfo.name,status:1,data:data,org_id:this.curOrg.id}
-          this.employees.push(Object.assign(e,e.data))
+          if(this.userInfo.id<1){//add
+            let e={id:rsp.id,account:this.userInfo.account,pass:md5(this.userInfo.pass),status:1,data:data,org_id:this.curOrg.id}
+            this.employees.push(Object.assign(e,e.data))
+
+          }else{
+            this.employees.map(e=>{if(e.id==rsp.id){
+              let keys=Object.keys(data)
+              for(let i=0;i<keys.length;i++){
+                e[keys[i]]=data[keys[i]]
+              }
+            }})
+          }
           this.query.total +=1; 
           this.viewInfo=false
         }else{
           this.$Message.error(code.Message(rsp.code))
         }}))
-      this.$ws.call(proto.EditEmployeeInfo,this.userInfo.id,this.curOrg.id,this.userInfo.account,md5(this.userInfo.pwd),JSON.stringify(data),this.userInfo.name)
+      this.$ws.call(proto.EditEmployeeInfo,this.userInfo.id,this.curOrg.id,0,0,data)
      },
     select(model){
       this.curOrg=model
@@ -142,6 +176,7 @@ export default {
     },
     //添加或编辑组织结构
     editOrganization(name,parent,action,id){
+      console.log("onEdit")
       if(name.trim()=="")return;
       this.$ws.addFunc(proto.EditOrganizationRsp,(rsp=>{
         if (rsp.code===code.OK){
@@ -175,30 +210,37 @@ export default {
         this.$ws.call(proto.DeleteOrganization,item.id);
       }
     }, 
-    edit(row){
-      this.viewInfo=true
-      this.employees.forEach((item,i)=>{
-        if(row.id==item.id){
-          this.userInfo=item
-          let fields=JSON.parse(item.data)
-      // fields.forEach(item=>{this.columns.push({title: item.n, key: item.id})})
-      // this.template={widgets:widget.recover(fields)}
-          return
-        }        
+    edit(row){ 
+      this.viewInfo=true  
+      this.userInfo=row 
+      this.template.widgets.map(w=>{
+        let keys=Object.keys(this.userInfo)
+        for(let i=0;i<keys.length;i++){
+          if(w.id==keys[i])
+            w.value=this.userInfo[keys[i]]
+        }
       })
     },
-    loadEmployees(org){
+    loadEmployees(org,search){
       if(org<1)return
+      if(!search)search=[]
       this.$ws.addFunc(proto.EmployeesRsp,function (rsp){
         this.employees=[]
         if(rsp.code==code.OK) {
-          rsp.list.forEach((item, i) => {item.account=item.account.replace(new RegExp((window.domain()+'-'), "g"),'');
-            rsp.list[i] = Object.assign(item, JSON.parse(item.data))})
-          this.employees = rsp.list
+          this.employees=[]
+          if(rsp.data.length>0 && rsp.fields.length>0){
+            let item={}
+            rsp.data.map(d=>{
+              item={}
+              rsp.fields.map((f,i)=>{item[f]=d[i]})
+              item.account=item.account.replace(new RegExp((window.domain()+'-'), "g"),'');
+              this.employees.push(item)
+            })
+          }
           this.query.total = rsp.total
         }
       },this)
-      this.$ws.call(proto.Employees,org,this.query.page,this.query.size)
+      this.$ws.call(proto.Employees,org,this.query.page,this.query.size,search)
     },
     LoadOrganizations(list){
       let children = {}
@@ -229,42 +271,44 @@ export default {
       this.columns=this.allColumns=[]
       this.allColumns.push({title: "ID", key:"id"})
       this.allColumns.push({title: "账号", key:"account"})
-      this.allColumns.push({title: "姓名", key:"name"})
       this.allColumns.push({title: "创建时间", key:"createAt"})
       this.allColumns.push({title: "登录时间", key:"loginAt"})
       this.allColumns.push({title: "状态", key:"status"})
       if(rsp.code == code.OK)   {
-      let fields=JSON.parse(rsp.data)
+      let fields=rsp.data
       fields.forEach(item=>{this.allColumns.push({title: item.n, key: item.id})})
       this.columns=[...this.allColumns]
-      this.columns.push({title: "操作", key: "action",slot:"action",width:100,align: "center"})
+      this.columns.push({title: "操作", key: "action",slot:"action",width:100,align: "center",renderHeader: (h, params) => {return this.setOprColumn(h)}})
       this.template={layout:JSON.parse(rsp.layout),widgets:widget.recover(fields)}
+      this.template2={layout:JSON.parse(rsp.layout),widgets:fields}
       }
     },
-    // 点击配置表头图标
-    showSetting() {
-      this.isSetting = !this.isSetting
-      if (this.checkProp.length<1) {
-        this.allColumns.map(a=>{this.checkProp.push(a.key)})
-      }
-    },
+    setOprColumn(h){
+      return h('div',[
+          h(TableColumn,{
+            props:{                                
+                content:'操作',
+                data:this.allColumns,
+                checkList:this.checkProp,
+            },
+            on:{
+                'handChange':(obj)=>{ 
+                  this.checkProp=obj
+                  this.dealTableColumn(this.checkProp) 
+                },
+            }
+          })
+      ])
+    }, 
+    //重置表头列
     dealTableColumn(){
       this.columns = [];
       this.checkProp.map(f=>{
         this.allColumns.map(a=>{if(a.key==f)this.columns.push(a)})
       })
       if(this.columns.length>0)
-        this.columns.push({title: "操作", key: "action",slot:"action",width:100,align: "center"})
-    },
-    // 提交确定事件
-    handleConfirm(val) {
-      console.log("list handleConfirm:",val)
-      this.checkProp = val
-      this.dealTableColumn(this.checkProp)
-    },
-    setSetting(){
-      this.isSetting=!this.isSetting
-    },
+      this.columns.push({title: "操作", key: "action",slot:"action",width:100,align: "center",renderHeader: (h, params) => {return this.setOprColumn(h)}})
+    }, 
   },
   created() {
     this.$ws.addFunc(proto.OrganizationsRsp,this.LoadOrganizations,this)
@@ -272,7 +316,10 @@ export default {
   }
 }
 </script>
+<style>
+.show i,p{display: inline-block;}
+.show:hover{background-color: #f5f5f5;}
+.hide{display:none;}
 
-<style scoped>
-
+.preview{width:100%;border-collapse: collapse;margin:3%}
 </style>

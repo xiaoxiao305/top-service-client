@@ -28,7 +28,7 @@ export default {
   data(){
     return{
       showSignup:false,
-      account:"123526655235",
+      account:"x",
       password:"123",
       ws:null,
       loading:false,

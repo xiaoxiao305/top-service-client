@@ -1,7 +1,10 @@
 <template>
   <ul v-if="!collapse">
     <tree :model="item" v-for="(item,i) in items" :key="i" :selectTab="select" :loadMenu="loadMenu" :add="addChild" :edit="editChild" :del="delChild"></tree>
-    <li v-if="!addNew" style="padding: 8px"><Button type="info" icon="ios-add-circle" @click="addNew=true">添加应用模块</Button></li>
+    <!-- <li v-if="!addNew" style="padding: 8px"><Button type="info" icon="ios-add-circle" @click="addNew=true">添加应用模块</Button></li> -->
+    <li v-if="!addNew" style="padding: 8px">
+      <p class="btn" @click="addNew=true" style="height:40px;line-height: 40px;"><Icon type="ios-add-circle"/>添加应用模块</p>
+    </li>
     <add-menu :show="addNew" :add="addMenu" :blur="()=>{addNew=false}"></add-menu>
   </ul>
   <ul v-else class="collapse">
@@ -185,5 +188,5 @@ export default {
 </script>
 <style scoped>
 .collapse{transition-property:opacity;transition-duration:0.5s;opacity: 1;}
-.collapse>li{text-align: center;height:40px;line-height:40px}
+.collapse>li{text-align: center;height:56px;line-height:56px}
 </style>
