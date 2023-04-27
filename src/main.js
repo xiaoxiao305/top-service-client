@@ -165,10 +165,10 @@ String.prototype.toDecimal=function (){
     abs =abs.replace("-","")
   }
   let number=0
-  let digits="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+  let digits="ABCDEFGHIJKLMNOPQRSTUVWXYZ"
   for (let i = 0; i < abs.length; i++) {
     let index =digits.indexOf(abs[i])
-    number += index * Math.pow(52, abs.length-1-i)
+    number += index * Math.pow(26, abs.length-1-i)
   }
   if (this[0] === '-'){
     return -number
@@ -177,11 +177,11 @@ String.prototype.toDecimal=function (){
 }
 Number.prototype.toNumber52=function (){
   let abs=Math.abs(this)
-  let digits="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+  let digits="ABCDEFGHIJKLMNOPQRSTUVWXYZ"
   let number=""
   while (abs !== 0) {
-    number = digits[abs % 52] + number
-    abs = Math.floor(abs / 52)
+    number = digits[abs % 26] + number
+    abs = Math.floor(abs / 26)
   }
   if (this<0){
     return "-"+number

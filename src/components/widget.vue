@@ -1,5 +1,5 @@
 <template>
-<div class="component">{{ model }}
+<div class="component">
     <Input v-if="model.type==1" :placeholder="model.placeholder" style="width: auto" v-model="model.value"/>
     <Input v-if="model.type==2" :placeholder="model.placeholder" style="width: auto" v-model="model.value"/>
     <RadioGroup v-if="model.type==3" v-model="model.value">
@@ -17,12 +17,14 @@
         :placeholder="model.placeholder" v-model="model.value"></DatePicker> 
     <Rate v-if="model.type==8" v-model="model.value"></Rate>
     <i-Switch v-if="model.type==9" v-model="model.value"></i-Switch> 
-    <Upload v-if="model.type==10" accept="image/*"
-    :multiple="model.isMul" :action="model.action">
+    <Upload v-if="model.type==10" accept="image/*" 
+    :before-upload="(v)=>handleUpload(model,v)" action=""
+    :multiple="model.multi==0?false:model.multi">
         <Icon type="ios-image" size="60" />
      </Upload>
-    <Upload v-if="model.type==11" type="drag" 
-        :multiple="model.isMul" :action="model.action">
+    <Upload v-if="model.type==11" type="drag"  action=""
+        :before-upload="(v)=>handleUpload(model,v)"
+        :multiple="model.multi==0?false:model.multi">
         <div style="padding: 20px 0">
             <Icon type="ios-cloud-upload" size="52" style="color: #3399ff"></Icon>
             <p>点击或将文件拖拽到这里上传</p>
@@ -36,11 +38,15 @@
 import RichEditor from './rich-editor.vue'
 export default {
     name:'widget',
-    props:['model'],
+    props:['model','handleUpload'],
     components:{RichEditor},
     methods:{
         rOnChange(editor){
-    this.model.value=editor.getHtml()}
+            this.model.value=editor.getHtml()
+        },
+        handleUpload1(file){
+            this.handleUpload(this.model,file)
+        }
     }
 }
 </script>

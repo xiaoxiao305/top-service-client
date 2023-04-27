@@ -6,7 +6,7 @@
         <td v-for="(col,c) in columns" v-if="col!==-1" :colspan="col%100>1?col%100:null" :rowspan="col>199?Math.floor(col/100):null" :key="r+'-'+c">
           <div v-for="(widget,i) in widgets(r,c)" :key="i">
             <b>{{widget.name}}</b>
-            <w :model="widget"></w>
+            <w :model="widget" :handleUpload="handleUpload"></w>
           </div>
         </td>
     </tr>
@@ -26,9 +26,20 @@ export default {
       layout:{rows:0,columns:0,grid:[]},
       forms:[], 
       tid:0,templateForm:{layout:[],widgets:[]},
+      files:{}
     }
   }, 
-  methods:{ 
+  methods:{
+    handleUpload(model,file){
+      if(!this.files[model.id])this.files[model.id]=[]
+      this.files[model.id].push(file)
+      this.forms=this.forms.map(f=>{
+         if(f.id==model.id)
+          f.value=this.files[model.id]
+        return f
+      })
+      console.log("this.forms:",this.forms)
+    },
     widgets(row,col){
       let widgets=[]
       for (let i=0;i<this.forms.length;i++){

@@ -51,7 +51,8 @@ const fields= {
   size: "s",        //s:[w,h] //图片
   filter: "ft",     //fi：“*.png|jpg”
   multi: "m",       //m:1 //允许多张
-  pos: "ps"         //行列布局
+  pos: "ps",         //行列布局
+  action:"ac"//图片地址
 }
 const parseTo=function (forms){
   let items=[]
@@ -59,7 +60,8 @@ const parseTo=function (forms){
     let item={}
     for(let k in widget){
       if (fields.hasOwnProperty(k)){
-        item[fields[k]]=widget[k]
+        //bool值转换为0或1传给服务器
+        item[fields[k]]=typeof(widget[k])=='boolean'?(widget[k]?1:0):widget[k]
       }
     }
     items.push(item)

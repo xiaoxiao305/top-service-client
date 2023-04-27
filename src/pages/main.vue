@@ -13,7 +13,6 @@
             </template>
             <template v-else>
               <list ref="list" :setTab="setTab" :menu="tab"></list>
-              <!-- <test></test> -->
             </template>
           </TabPane>
         </Tabs>

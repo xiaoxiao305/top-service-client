@@ -3,67 +3,65 @@
     <div>
         <!-- 系统管理  主页面 -->
         <ul v-if="tab.type==0">
-            <li v-for="t in tabs" :key="t.type" span="3" @click="showPage(t)">
+            <li v-for="t in homeTabs" :key="t.type" span="3" @click="showPage(t)">
                 <div><Icon :type="t.icon" size="70"/><br>
                 <b>{{ t.name }}</b>  </div>
             </li> 
         </ul>
-        <!-- <ul v-if="tab.type==0" class="ul border">
-            <li><div>111111</div></li>
-            <li><div>222222222</div></li>
-            <li>
-                <ul>
-                    <li><div>3333333</div></li>
-                    <li><div>444444444</div></li>
-                    <ul><li><div>55555555</div></li></ul>
-                </ul>
-            </li>
-        </ul> -->
+        <!-- 职能组 -->
+        <operation-group v-else-if="tab.type==4"></operation-group>
         <!-- 工作台 -->
         <home v-else-if="tab.type==1"></home>
         <!-- 系统配置 主页面 -->
         <ul v-else-if="tab.type==2">
-            <li  v-for="t in tabs2" :key="t.type" span="3" @click="showPage(t)">
+            <li  v-for="t in settingTabs" :key="t.type" span="3" @click="showPage(t)">
                 <div><Icon :type="t.icon" size="70"/><br>
                 <b>{{ t.name }}</b>  </div>
             </li> 
         </ul>
         <!-- 组织机构 -->
         <organization v-else-if="tab.type==5"></organization>
-        <flowchart v-else-if="tab.type==6"></flowchart>
+        <!-- <flowchart v-else-if="tab.type==6"></flowchart> -->
+        <flow-setting v-else-if="tab.type==6"></flow-setting>
         <!-- 系统配置 子页面 -->
         <!-- 系统预设数据源 -->
         <setting-data v-else-if="tab.type==11"></setting-data>
         <!-- 员工扩展信息 -->
         <div v-else-if="tab.type==12">
-            <form-design v-if="designTemplate" :type="1" :save="saveTemp" :template="designTemplate"></form-design>
+            <form-design v-if="designTemplate" :type=1 :template="designTemplate"></form-design>
         </div>
-        
+        <div v-else-if="tab.type==13">
+           <test></test>
+        </div>
     </div>
 </template>
 <script>
 import Home from "../components/home";
-import Flowchart from '../pages/flowchart';
+import Flowchart from '../components/flow-chart';
 import SettingData from "../components/setting-data";
+import FlowSetting from "../components/flow-setting";
 import FormDesign from './form-design.vue';
 import proto from "../logic/proto"
 import code from "../logic/code"
 import widget from "../logic/custom-widget";
 import Organization from "./organization.vue";
+import OperationGroup from "./operation-group.vue";
 
 export default {
     name:"SysManage",
-    components:{Organization, Flowchart,Home,SettingData,FormDesign},
+    components:{Organization, Flowchart,Home,SettingData,FormDesign,OperationGroup,FlowSetting},
     props:['tab','setTab'],
     data(){
         return {
-            tabs:[{type:1,name:"工作台",icon:"ios-home"},
+            homeTabs:[{type:1,name:"工作台",icon:"ios-home"},
                 {type:2,name:"系统配置",icon:"ios-pricetags"},
                 {type:5,name:"组织机构",icon:"ios-list"},
                 {type:3,name:"角色管理",icon:"ios-people"},
                 {type:4,name:"受理组",icon:"ios-calendar"},
-                {type:6,name:"流程配置",icon:"ios-calendar-outline"}],
-            tabs2:[{type:7,name:"公司名称LOGO",icon:"ios-apps"},
+                {type:6,name:"流程配置",icon:"ios-calendar-outline"},
+                {type:13,name:"测试",icon:"ios-calendar-outline"}
+            ],
+            settingTabs:[{type:7,name:"公司名称LOGO",icon:"ios-apps"},
                 {type:8,name:"License授权",icon:"ios-albums"},
                 {type:9,name:"登录日志",icon:"ios-book"},
                 {type:10,name:"操作日志",icon:"ios-brush"},

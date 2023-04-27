@@ -1,49 +1,116 @@
 <template>
- <div>
+  
+<div>
+  <div>
+    input-单：<input type="file" accept="image/png,image/jpeg,image/gif,image/jpg" ref="icon1"/>
+    <Button icon="md-cloud-upload" size="small" class="ico-upload" @click="fileTest1">上传</Button>
+  </div>
+  <div>
+    input-多：<input type="file" accept="image/png,image/jpeg,image/gif,image/jpg" ref="icon2" multiple />
+    <Button icon="md-cloud-upload" size="small" class="ico-upload" @click="fileTest2">上传</Button>
+  </div> 
+  upload-单:
+  <Upload
+      :before-upload="handleUpload"
+      action="">
+      <Button icon="ios-cloud-upload-outline">选择图片</Button>
+  </Upload>
+  <Button type="text" @click="upload1">上传</Button><br/>
+  upload-多:
+  <Upload multiple
+      :before-upload="handleUpload2"
+      action="">
+      <Button icon="ios-cloud-upload-outline">选择图片</Button>
+  </Upload>
+  <Button type="text" @click="upload2">上传</Button>
+</div>
 
- </div>
+
 </template>
-
 <script>
-import Organization from "../components/organization";
-
+import ajax from "../logic/ajax"
 export default {
-  name: "test",
-  components: {Organization},
-  methods:{
-    getDiff(){
-      //差集 数组arr1相对于arr2所没有的
-      let arr1=[1,2,3,4]
-      let arr2=[1,4]
-      let diff=arr1.filter(item=>arr2.indexOf(item)==-1);
-      console.log("差集",diff);
-    }, 
-    getAtomicIds(index,type,forms){
-      let list=[],used=[],noUsed=[]
-      if(type==2 || type==12){
-        for(let i=0;i<(type==2?6:type==12?8:0);i++){
-          list.push((((type==2?'DM':type==12?'DS':'')).toDecimal()+i).toNumber52())
-        }
-        used=Array.from(forms.filter(f => f.type==type),({id})=>id);
-      }else{
-        for(let i=0;i<index.toDecimal()+1;i++){
-          list.push(i.toNumber52())
-        }
-        used = Array.from(forms,({id})=>id);
-      } 
-      //差集 数组list相对于used所没有的
-      noUsed=list.filter(item=>used.indexOf(item)==-1);
-      console.log("差集",noUsed); 
-    }  
+  name: "test", 
+  data(){
+    return { 
+      files1:[], 
+      files2:[],
+    }
   },
-  created(){
-    let forms=[{id:'A'},{id:'D'},{id:'N'},
-    {id:'DN',type:2},{id:'DO',type:2},
-    {id:'DT',type:12},{id:'DU',type:12}]
-    this.getAtomicIds('O','',forms)
-    this.getAtomicIds('',2,forms)
-    this.getAtomicIds('',12,forms)
-    
+  methods:{
+    handleUpload (file) {
+      // this.file1 = file;
+      this.files1.push(file)
+      return false;
+    },  
+    handleUpload2 (file) {
+      console.log(file)
+      // this.file2 = file;
+      this.files2.push(file)
+      return false;
+    },
+    fileTest1(){
+      let data={"B":this.$refs.icon1.files}
+      console.log("fileTest1:",data)
+      ajax.Upload(88,data,0).then((res)=>{
+        console.log("fileTest1 ajax res: ",res)
+      })
+    }, 
+    fileTest2(){
+      let data={"B":this.$refs.icon2.files}
+      console.log("fileTest2:",data)
+      ajax.Upload(88,data,0).then((res)=>{
+        console.log("fileTest2 ajax res: ",res)
+      })
+    }, 
+    upload1(){
+      let data={"B":this.files1}
+      console.log("upload1:",data," files1:",this.files1)
+      let forms=[{id:'A',type:1,value:''},{id:'B',type:2,value:''}]
+      ajax.Upload(88,data,0).then((res)=>{
+        console.log("upload1 ajax res: ",res)
+        Object.keys(res.fields).forEach(k=>{
+          forms.forEach(f=>{
+            if(f.id==k)f.value=res.fields[k]
+          })
+        })
+        console.log("forms:",forms) 
+      })
+    }, 
+    upload2(){ 
+      let data={"B":this.files2}
+      console.log("upload2:",data," files2:",this.files2)
+      ajax.Upload(88,data,0).then((res)=>{
+        console.log("upload2 ajax res: ",res)
+        Object.keys(res.fields).forEach(k=>{
+          forms.forEach(f=>{
+            if(f.id==k)f.value=res.fields[k]
+          })
+        })
+        console.log("forms:",forms) 
+      })
+    },
+    upload(data){
+      let req = new XMLHttpRequest();
+      req.responseType = 'text';
+      let formData = new FormData()
+      formData.append("uid","1")
+      formData.append("token", "user.token")
+      formData.append("tid", "1")
+      formData.append("type", "0") //0:模板,1:员工,2:流程
+      Object.keys(data).forEach(name => {
+        let files=data[name]
+          for (let i=0;i<files.length;i++){
+            formData.append(name, files[i],files[i].name)
+          }
+      })
+      req.onload = (e) => {
+        console.log("uploadTest:",e)
+        let rsp = JSON.parse(e.target.response)
+      }
+      req.open("POST","http://test.itsmtop.com/upload")
+      req.send(formData)
+    }
   }
 }
 </script>

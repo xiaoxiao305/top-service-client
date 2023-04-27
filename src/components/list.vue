@@ -26,7 +26,7 @@
       </Modal>  
       <!-- 页面设计 -->
       <Modal v-model="viewDesign" title="编辑配置" width="70%" footer-hide>
-        <form-design v-if="viewDesign" :type=0  :save="saveTemp" :template="designTemplate"></form-design>
+        <form-design v-if="viewDesign" :menuId="menu.id" :type=0 :template="designTemplate" :callBack="refreshTemplate"></form-design>
       </Modal> 
     </div>
   </template>
@@ -38,6 +38,7 @@ import proto from "../logic/proto"
 import code from "../logic/code"
 import TableColumn from '../components/table-column'
 import Searcher from '../components/searcher'
+import ajax from "../logic/ajax"
 export default {
   name: "list",
   props:['menu'],
@@ -111,7 +112,7 @@ export default {
     //加载操作列+表头字段设置
     setOprColumn(h){
       return h(TableColumn,{
-            props:{                                
+            props:{
                 content:'操作',
                 data:this.allColumns,
                 checkList:this.checkProp,
@@ -124,9 +125,16 @@ export default {
             }
           })
     },
+    //模板页保存后，刷新当前页面数据
+    refreshTemplate(tid,atomicId,layoutInfo,dbTemplates){
+        this.viewDesign=false
+        this.loadTempInfo({tid:tid,index:atomicId,layout:layoutInfo,data:dbTemplates})
+    },
     //模板设计---保存
     saveTemp(tId,forms,atomicId,layout,clear){
+      console.log(forms)
       let dbTemplates =widget.parseTo(forms)
+      console.log(dbTemplates)
       let layoutInfo=JSON.stringify(layout.grid)
       this.$ws.addFunc(proto.EditTemplateInfoRsp, function (rsp) {
         if (rsp.code === code.OK) {         
@@ -170,30 +178,55 @@ export default {
       }, this) 
       this.$ws.call(proto.TemplateData,tid,this.query.page,this.query.size,search)
     },
+    handleUpload(file){
+      
+    },
     //保存数据
     saveData(did,tid,forms){
-        console.log(forms);
-      let dbTemplates=widget.parseTo(forms)
-      let data={}
-      dbTemplates.map(w=>{data[w.id]=w.v})
-      this.$ws.addFunc(proto.EditTemplateDataRsp, function (rsp) {
-        if (rsp.code === code.OK) {
-          this.viewData=false
-          this.$Message.info("保存成功");
-            //刷新列表数据
-          if(did>0){//修改
-            data.id=did
-            this.data= this.data.map(d=>{if(d.id==did)d=data;return d})
-          }else{//新增
-            data.id=rsp.id
-            this.data.push(data)
-            this.query.total+=1
-          }
-        } else {
-          this.$Message.error(code.Message(rsp.code))
+      console.log("forms:",forms);
+      //有上传图片或文件
+      let d={}
+      forms.forEach(f=>{
+        if((f.type==10 || f.type==11) && f.value !=""){//上传图片或文件
+          d[f.id]=f.value
+        }return f
+      })
+      console.log("data:",d)
+    
+      ajax.Upload(tid,d,0).then((res)=>{
+        console.log("ajax res:",res)
+        if(res.code==code.OK){ 
+          Object.keys(res.fields).forEach(k=>{
+            forms.forEach(f=>{
+              if(f.id==k)f.value=res.fields[k]
+            })
+          })
+          console.log("forms:",forms) 
+          let dbTemplates=widget.parseTo(forms)
+          let data={}
+          dbTemplates.map(w=>{data[w.id]=w.v})
+          this.$ws.addFunc(proto.EditTemplateDataRsp, function (rsp) {
+            if (rsp.code === code.OK) {
+              this.viewData=false
+              this.$Message.info("保存成功");
+                //刷新列表数据
+              if(did>0){//修改
+                data.id=did
+                this.data= this.data.map(d=>{if(d.id==did)d=data;return d})
+              }else{//新增
+                data.id=rsp.id
+                this.data.push(data)
+                this.query.total+=1
+              }
+            } else {
+              this.$Message.error(code.Message(rsp.code))
+            }
+          }, this)
+          this.$ws.call(proto.EditTemplateData,did,tid,data);
+
         }
-      }, this)
-      this.$ws.call(proto.EditTemplateData,did,tid,data);
+      })
+    
     },
     //删除数据
     delData(row){
@@ -220,6 +253,7 @@ export default {
     },
   },
     mounted(){
+      console.log("this.m:",this.menu)
       if(this.menu.type==0){//list
         this.loadTemp(this.menu.tid)
         this.loadData(this.menu.tid)

@@ -1,7 +1,7 @@
 //import X6 from "@antv/x6";
 import {Addon, Graph as X6Graph, Shape} from "@antv/x6";
 const ports = {groups: {}, items: []}
-const direction=["top","right","bottom","left"]
+const direction=["top","right","bottom","left"]//port
 direction.forEach(dir=>{
   ports.items.push({group:dir,id:dir})
   ports.groups[dir]={
@@ -214,16 +214,19 @@ export const Stencil=(graph)=>{
   })
   let shapes=[
     {label:"开始",type:"start"},
-    {label:"过程",type:"process"},
-    {label:"可选过程",type:"rect"},
-    {label:"决策",type:"polygon"},
-    {label:"数据",type:"data"},
-    {label:"连接",type:"circle"},
-    {label:"流程",type:"ellipse"},
-    {label:"存储",type:"cylinder"},
+    {label:"过程",type:"process"}, 
+    {label:"决策",type:"polygon"}, ,
+    {label:"结束",type:"circle"},
+    
   ]
   let nodes=[]
-  shapes.forEach(item=>{nodes.push(graph.createNode({shape: "custom-" + item.type,label: item.label}))})
+  shapes.forEach(item => {
+    nodes.push(graph.createNode({
+      shape: "custom-" + item.type, label: item.label, data: {
+        fields: [], user_fields: [], fields2: {}, user_fields2: {}
+      }
+    }))
+  })
   stencil.load(nodes, 'flowchart')
   return stencil
 }

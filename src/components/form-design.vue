@@ -6,10 +6,10 @@
     </div>
     <div class="form" style="min-height: 500px;">
       <div>
+        <p class="btn" v-if="type==2"><Input type="text" v-model="pageName" placeholder="请输入表单名称" /></p>
         <p class="btn" @click="layout.preview=true"><Icon type="ios-search" size="24" />预览</p>
-        <p class="btn" @click="save(id,forms,atomicId,layout,clear)"><Icon type="ios-create-outline" size="24" />保存</p>
+        <p class="btn" @click="save()"><Icon type="ios-create-outline" size="24" />保存</p>
       </div> 
-      
       <table @dblclick="layout.show=true"  @mouseup="merge.check($event)">
         <tr v-for="(columns,r) in layout.grid" :key="r">
           <td v-for="(col,c) in columns" v-if="col!==-1"
@@ -68,7 +68,7 @@
         </li>
         <li v-if="current.type===6||current.type===7"><b>范围</b><p style="line-height:32px;width: 100%;"><i-Switch v-model="current.range"></i-Switch></p></li>
         <li v-if="current.type===10 || current.type===11"><b>上传地址</b><Input v-model="current.action"/></li>
-        <li v-if="current.type===10 || current.type===11"><b>是否多选</b><p style="line-height:32px;width: 100%;"><i-Switch v-model="current.isMul"></i-Switch></p></li>
+        <li v-if="current.type===10 || current.type===11"><b>是否多选</b><p style="line-height:32px;width: 100%;"><i-Switch v-model="current.multi"></i-Switch></p></li>
       </ul>
     </div>
     <Modal v-model="layout.show" title="设置布局" @on-ok="setLayout">
@@ -88,7 +88,7 @@
           </td>
         </tr>
       </table>
-      <p style="margin-left:auto;margin-right: 5%;height: 50px;line-height: 50px;" class="btn" @click="save((model&&model.id)?model.id:0,forms,atomicId,layout,clear)"><Icon type="ios-create-outline" size="24" />确定</p>
+      <p style="margin-left:auto;margin-right: 5%;height: 50px;line-height: 50px;" class="btn" @click="save"><Icon type="ios-create-outline" size="24" />确定</p>
       </div>
     </Modal>
   </div>
@@ -99,11 +99,11 @@ import proto from "../logic/proto";
 import code from "../logic/code";
 import widTool from "../logic/custom-widget";
 import w from "../components/widget"; 
-import { random } from '@antv/x6/lib/util/number/number';
+import { random } from '@antv/x6/lib/util/number/number'; 
 export default {
   name: "FormDesign",
   components:{w},
-  props:['type','save','template'],//type 0数据设计页面  1员工信息模板页面 2流程页面
+  props:['menuId','type','template','callBack'],
   data(){
     return {
       widgets:[
@@ -120,8 +120,8 @@ export default {
         {type:7,name:"日期选择器",icon:"ios-calendar",range:false},
         {type:8,name:"评分",icon:"ios-star-outline"},
         {type:9,name:"开关",icon:"ios-switch"},
-        {type:10,name:"图片",icon:"ios-image",action:"/static",isMul:false},
-        {type:11,name:"文件",icon:"md-cloud-upload",action:"/static",isMul:false},
+        {type:10,name:"图片",icon:"ios-image",multi:false},
+        {type:11,name:"文件",icon:"md-cloud-upload",multi:false},
         {type:12,name:"富文本编辑",icon:"md-document"},
       ],
       current: {id:""},
@@ -134,10 +134,41 @@ export default {
       forms:[],//【{type,name,position}】
       atomicId:"",
       merge:new Merge(),
-      id:0,clear:[],//已删除控件对应的索引值key      
+      id:0,clear:[],//本次操作已删除控件对应的索引值key  
+      noUsed:[],    //最大index前未使用的索引值key
+      pageName:""//流程页面模板设置时，页面名称
     }
   },
   methods:{
+    save(){      
+      console.log(this.forms)
+      let dbTemplates =widTool.parseTo(this.forms)
+      console.log(dbTemplates)
+      let layoutInfo=JSON.stringify(this.layout.grid)
+      if(this.type==2 && this.pageName==""){
+        this.$Message.info("请输入表单名称")
+        return
+      }
+      this.$ws.addFunc(proto.EditTemplateInfoRsp, function (rsp) {
+        if (rsp.code === code.OK) {         
+          if(this.id<1 && this.type==0){//普通页面模板 insert
+            this.$ws.addFunc(proto.BindTemplateRsp, function (rsp) {
+              if (rsp.code !== code.OK) 
+                this.$Message.error(code.Message(rsp.code))
+            }, this)
+            this.$ws.call(proto.BindTemplate,this.menuId,rsp.id,0);
+          }
+          this.$Message.info("保存成功");
+          if(this.type==0)
+            this.callBack(rsp.id,this.atomicId,layoutInfo,dbTemplates)
+          else if(this.type==2)
+            this.callBack(rsp.id,this.pageName,dbTemplates)
+        }else
+            this.$Message.error(code.Message(rsp.code))
+        }, this)
+                                            //id,模板字段数据集合,最大字段名index,布局,type:0:数据 ,1:员工 ,2:流程,页面名称：流程模板1 仅type=2时有效,当前form需要清除的字段集合                                            
+      this.$ws.call(proto.EditTemplateInfo,this.id,dbTemplates,this.atomicId,layoutInfo,this.type,this.pageName,this.clear);
+    },
     optionsChange(){
       this.current.op={t:0,ds:this.current.options.map(f=>f.label)}
     },
@@ -245,6 +276,9 @@ export default {
           if(this.clear.length>0){
             index=this.clear[0]
             this.clear.shift()
+          }else if(this.noUsed.length>0){
+            index=this.noUsed[0]
+            this.noUsed.shift()
           }else{
             index=(this.atomicId.toDecimal()+1).toNumber52()
             this.atomicId=index
@@ -265,6 +299,7 @@ export default {
       widget.pos=[row,col]
       widget.value=(widget.type==3||widget.type==5||widget.type==8)?0:widget.type==4?[]:widget.type==9?true:
     ((widget.type==6&&widget.range) || (widget.type==7&&widget.range))?['','']:''
+    
       this.forms.push(widget)
       this.current = widget
       if(this.current.options && this.current.options.length>0)
@@ -301,8 +336,8 @@ export default {
       this.id=template.tid
       this.forms=widTool.recover(template.data)
       this.atomicId=template.index
-      this.clear=widTool.getNoUsedList(this.forms,'',this.atomicId)
-      console.log("clear:",this.clear)
+      this.noUsed=widTool.getNoUsedList(this.forms,'',this.atomicId)
+      console.log("noUsed:",this.noUsed)
       this.layout.grid = JSON.parse(template.layout)
       this.layout.rows = this.layout.grid.length
       for (let i = 0; i < this.layout.rows; i++) {
@@ -325,6 +360,9 @@ export default {
         break
       case 2:
         //todo 流程页面
+      // this.$ws.addFunc(proto.TemplateInfoRsp, function (rsp) {
+      // }, this) 
+      // this.$ws.call(proto.TemplateInfo,0);
         break
     }
   }

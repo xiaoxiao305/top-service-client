@@ -50,6 +50,7 @@ export default {
     LoginRsp(res){
       if (res.code===code.OK) {
         this.ws.authorized=true
+        ajax.Get("/cookie?id="+res.info.id+"&token="+res.info.token)
         this.addSocket(this.ws)
         user.setInfo(res.info)
         this.$router.push("/m")

@@ -4,6 +4,7 @@ import Socket from "../logic/websocket"
 import proto from "../logic/proto"
 import code from "../logic/code"
 import user from "../logic/user"
+import ajax from "../logic/ajax"
 Vue.use(Router)
 const origin = Router.prototype.push
 Router.prototype.push = function(location) {
@@ -35,11 +36,11 @@ let routes=[
     path: '/404',
     component: ()=>import("@/pages/404"),
   },
-  {
-    path:"/flowchart",
-    name:"Flowchart",
-    component: ()=>import("@/pages/flowchart"),
-  },
+  // {
+  //   path:"/flowchart",
+  //   name:"Flowchart",
+  //   component: ()=>import("@/pages/flowchart"),
+  // },
   {
     path:"/test",
     name:"Test",
@@ -51,7 +52,7 @@ let router=new Router({mode:"history",routes:  routes})
 router.beforeEach((to, from, next) => {
   // return next()
   let path=to.path.toLowerCase().split("?")[0]
-  if (path==="/login" || path=="/404") {
+  if (path==="/login" || path=="/404" || path=="/test") {
     return next()
   }
   let app=router.app
@@ -75,6 +76,7 @@ router.beforeEach((to, from, next) => {
       }
       ws.authorized=true
       user.setInfo(res.info)
+      ajax.Get("/cookie?id="+res.info.id+"&token="+res.info.token)
       app.addSocket(ws)
       next()
     })
